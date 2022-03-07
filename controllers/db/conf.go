@@ -15,8 +15,9 @@ type databaseConf struct {
 }
 
 func init() {
-	if err := godotenv.Load("/controllers/db/db.env"); err != nil {
-		log.Fatalln("Error loading db.env file")
+	os.Clearenv()
+	if err := godotenv.Load("controllers/db/db.env"); err != nil {
+		log.Fatalln("Error loading db.env file", err)
 	}
 }
 
