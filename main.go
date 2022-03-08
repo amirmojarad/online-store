@@ -6,11 +6,18 @@ import (
 	"log"
 	"online-supermarket/controllers/db"
 	"online-supermarket/controllers/ent"
+	"online-supermarket/views/api"
 	"os"
 	"time"
 
 	_ "github.com/lib/pq"
 )
+
+// TODO creating api in views
+// TODO add edges
+// TODO auth
+// TODO adding gRPC
+// TODO Create a service for shared media
 
 func main() {
 
@@ -38,6 +45,5 @@ func main() {
 	if err := client.Schema.Create(context.Background()); err != nil {
 		log.Fatalf("failed creating schema resources: %v", err)
 	}
-	client.Category.Create().SetDescription("asd").SetName("asd").SetThumbnail("asdsad").Save(ctx)
-	log.Println(client.Category.Query().All(ctx))
+	api.RunAPI(ctx, client)
 }
