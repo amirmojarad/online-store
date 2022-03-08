@@ -14,7 +14,10 @@ type API struct {
 }
 
 func RunAPI(ctx context.Context, client *ent.Client) {
-	api := API{Router: gin.Default(), Crud: &crud.Crud{Ctx: ctx, Client: client}}
+	api := API{Router: gin.New(), Crud: &crud.Crud{Ctx: ctx, Client: client}}
+
+	api.Router.Use(gin.Logger())
+	api.Router.Use(gin.Recovery())
 
 	api.POSTCategory("/category")
 	api.GETCategories("/category")
