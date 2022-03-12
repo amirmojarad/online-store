@@ -110,11 +110,26 @@ func (cc *CategoryCreate) check() error {
 	if _, ok := cc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Category.name"`)}
 	}
+	if v, ok := cc.mutation.Name(); ok {
+		if err := category.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Category.name": %w`, err)}
+		}
+	}
 	if _, ok := cc.mutation.Description(); !ok {
 		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Category.description"`)}
 	}
+	if v, ok := cc.mutation.Description(); ok {
+		if err := category.DescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "Category.description": %w`, err)}
+		}
+	}
 	if _, ok := cc.mutation.Thumbnail(); !ok {
 		return &ValidationError{Name: "thumbnail", err: errors.New(`ent: missing required field "Category.thumbnail"`)}
+	}
+	if v, ok := cc.mutation.Thumbnail(); ok {
+		if err := category.ThumbnailValidator(v); err != nil {
+			return &ValidationError{Name: "thumbnail", err: fmt.Errorf(`ent: validator failed for field "Category.thumbnail": %w`, err)}
+		}
 	}
 	return nil
 }

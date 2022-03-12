@@ -13,9 +13,9 @@ type Category struct {
 // Fields of the Category.
 func (Category) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("name").Unique(),
-		field.String("description"),
-		field.String("thumbnail"),
+		field.String("name").NotEmpty().Unique(),
+		field.String("description").NotEmpty(),
+		field.String("thumbnail").NotEmpty(),
 	}
 }
 

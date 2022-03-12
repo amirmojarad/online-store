@@ -25,7 +25,7 @@ type Customer struct {
 // Fields of the Customer.
 func (Customer) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("email").Validate(ValidateEmail()),
+		field.String("email").Validate(ValidateEmail()).Unique(),
 		field.String("password"),
 		field.String("full_name").Optional(),
 		field.String("billing_address").Optional(),

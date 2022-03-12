@@ -6,7 +6,7 @@ import (
 	"online-supermarket/controllers/ent"
 )
 
-func (crud Crud) DeleteCategory(id int) (string, error) {
+func (crud *Crud) DeleteCategory(id int) (string, error) {
 	if err := crud.Client.Category.DeleteOneID(id).Exec(crud.Ctx); err != nil {
 		log.Println("on DeleteCategory in controllers/db/crud/category.go: ", err)
 		return "", err

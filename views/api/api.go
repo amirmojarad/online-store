@@ -19,6 +19,9 @@ func RunAPI(ctx context.Context, client *ent.Client) {
 	api.Router.Use(gin.Logger())
 	api.Router.Use(gin.Recovery())
 
+	api.Login("/login")
+	api.SignUp("/signup")
+
 	api.POSTCategory("/category")
 	api.GETCategories("/category")
 	api.DELETECategory("/category/:id")

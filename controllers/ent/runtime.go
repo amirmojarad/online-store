@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"online-supermarket/controllers/ent/category"
 	"online-supermarket/controllers/ent/customer"
 	"online-supermarket/controllers/ent/order"
 	"online-supermarket/controllers/ent/product"
@@ -14,6 +15,20 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	categoryFields := schema.Category{}.Fields()
+	_ = categoryFields
+	// categoryDescName is the schema descriptor for name field.
+	categoryDescName := categoryFields[0].Descriptor()
+	// category.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	category.NameValidator = categoryDescName.Validators[0].(func(string) error)
+	// categoryDescDescription is the schema descriptor for description field.
+	categoryDescDescription := categoryFields[1].Descriptor()
+	// category.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	category.DescriptionValidator = categoryDescDescription.Validators[0].(func(string) error)
+	// categoryDescThumbnail is the schema descriptor for thumbnail field.
+	categoryDescThumbnail := categoryFields[2].Descriptor()
+	// category.ThumbnailValidator is a validator for the "thumbnail" field. It is called by the builders before save.
+	category.ThumbnailValidator = categoryDescThumbnail.Validators[0].(func(string) error)
 	customerFields := schema.Customer{}.Fields()
 	_ = customerFields
 	// customerDescEmail is the schema descriptor for email field.

@@ -4,14 +4,14 @@ import (
 	"log"
 	"net/http"
 	"online-supermarket/controllers/ent"
-	"online-supermarket/views/middlewares"
+	"online-supermarket/views/middlewares/security"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (api *API) POSTCategory(path string) {
-	api.Router.POST(path, middlewares.CategoryMiddleWare(), middlewares.CategoryMiddleWare1(), func(ctx *gin.Context) {
+	api.Router.POST(path, security.CheckAuth(), func(ctx *gin.Context) {
 		categoryModel := ent.Category{}
 		if err := ctx.BindJSON(&categoryModel); err != nil {
 			log.Println("error occured while binding json to model: ", err)
@@ -33,7 +33,7 @@ func (api *API) POSTCategory(path string) {
 }
 
 func (api *API) GETCategories(path string) {
-	api.Router.GET(path, middlewares.CategoryMiddleWare(), middlewares.CategoryMiddleWare1(), func(ctx *gin.Context) {
+	api.Router.GET(path, security.CheckAuth(), func(ctx *gin.Context) {
 		if categories, err := api.Crud.GetAllCategories(); err != nil {
 			log.Println("error occured when fetching categories to database: ", err)
 			ctx.IndentedJSON(http.StatusServiceUnavailable, err.Error())
