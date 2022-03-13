@@ -84,5 +84,5 @@ DELETE
         - /users/:id/purchase/:id
 
 PATCH
-        - /users
+        - /users/:id
 ```
