@@ -18,7 +18,7 @@ func (Product) Fields() []ent.Field {
 	return []ent.Field{
 		// SKU stands for “stock keeping unit”
 		// it is a number (usually eight alphanumeric digits)
-		field.String("sku"),
+		field.Int("sku"),
 		field.String("name"),
 		field.Float("price"),
 		field.Float("weight"),

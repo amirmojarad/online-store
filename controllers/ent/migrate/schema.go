@@ -71,7 +71,7 @@ var (
 	// ProductsColumns holds the columns for the "products" table.
 	ProductsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "sku", Type: field.TypeString},
+		{Name: "sku", Type: field.TypeInt},
 		{Name: "name", Type: field.TypeString},
 		{Name: "price", Type: field.TypeFloat64},
 		{Name: "weight", Type: field.TypeFloat64},

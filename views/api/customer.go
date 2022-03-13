@@ -1,13 +1,30 @@
 package api
 
-import "github.com/gin-gonic/gin"
+import (
+	"log"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
 
 func (api API) CustomerRouter() {
-	category := api.Router.Group("/category")
-	category.POST("/users", postCustomer())
-	category.POST("/users/:id/purchase", postPurchaseToCustomer())
-	category.POST("/users/:id/orders", postOrderToCustomer())
-	category.POST("/users/:id/cart", postCartItemToCustomer())
+	category := api.Router.Group("/users")
+	category.POST("", postCustomer())
+	category.POST("/:id/purchase", postPurchaseToCustomer())
+	category.POST("/:id/orders", postOrderToCustomer())
+	category.POST("/:id/cart", postCartItemToCustomer())
+	category.GET("/:id/products/all", api.getAllProducts())
+}
+
+func (api API) getAllProducts() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		if products, err := api.Crud.GetProducts(); err != nil {
+			log.Println("on getAllProducts in view/api/customer.go: ", err)
+			ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
+		} else {
+			ctx.IndentedJSON(http.StatusOK, products)
+		}
+	}
 }
 
 func postCustomer() gin.HandlerFunc {

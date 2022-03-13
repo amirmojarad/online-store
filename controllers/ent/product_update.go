@@ -30,8 +30,15 @@ func (pu *ProductUpdate) Where(ps ...predicate.Product) *ProductUpdate {
 }
 
 // SetSku sets the "sku" field.
-func (pu *ProductUpdate) SetSku(s string) *ProductUpdate {
-	pu.mutation.SetSku(s)
+func (pu *ProductUpdate) SetSku(i int) *ProductUpdate {
+	pu.mutation.ResetSku()
+	pu.mutation.SetSku(i)
+	return pu
+}
+
+// AddSku adds i to the "sku" field.
+func (pu *ProductUpdate) AddSku(i int) *ProductUpdate {
+	pu.mutation.AddSku(i)
 	return pu
 }
 
@@ -229,7 +236,14 @@ func (pu *ProductUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := pu.mutation.Sku(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: product.FieldSku,
+		})
+	}
+	if value, ok := pu.mutation.AddedSku(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
 			Value:  value,
 			Column: product.FieldSku,
 		})
@@ -378,8 +392,15 @@ type ProductUpdateOne struct {
 }
 
 // SetSku sets the "sku" field.
-func (puo *ProductUpdateOne) SetSku(s string) *ProductUpdateOne {
-	puo.mutation.SetSku(s)
+func (puo *ProductUpdateOne) SetSku(i int) *ProductUpdateOne {
+	puo.mutation.ResetSku()
+	puo.mutation.SetSku(i)
+	return puo
+}
+
+// AddSku adds i to the "sku" field.
+func (puo *ProductUpdateOne) AddSku(i int) *ProductUpdateOne {
+	puo.mutation.AddSku(i)
 	return puo
 }
 
@@ -601,7 +622,14 @@ func (puo *ProductUpdateOne) sqlSave(ctx context.Context) (_node *Product, err e
 	}
 	if value, ok := puo.mutation.Sku(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: product.FieldSku,
+		})
+	}
+	if value, ok := puo.mutation.AddedSku(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
 			Value:  value,
 			Column: product.FieldSku,
 		})

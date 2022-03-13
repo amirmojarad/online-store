@@ -16,12 +16,15 @@ func CreateFile(filePath string) *file {
 	}
 }
 
-func (f file) ReadJson(obj interface{}) {
+func (f file) ReadJson(obj interface{}) error {
 	if content, err := ioutil.ReadFile(f.filePath); err != nil {
-		log.Panic(err)
+		log.Println("on ReadJson an error occured: ", err)
+		return err
 	} else {
 		if err := json.Unmarshal(content, &obj); err != nil {
-			log.Panic(err)
+			log.Println("on ReadJson an error occured: ", err)
+			return err
 		}
 	}
+	return nil
 }

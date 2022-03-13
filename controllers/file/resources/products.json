@@ -1,0 +1,74 @@
+[
+    {
+        "sku": 5,
+        "name": "laptop",
+        "price": 200.99,
+        "weight": 15.5,
+        "descriptions": "Asus Laptop",
+        "thumbnail" : "",
+        "stock": 10
+    },
+    {
+        "sku": 8,
+        "name": "Hair shampoo",
+        "price": 15.99,
+        "weight": 3.5,
+        "descriptions": "Hair Shampoo",
+        "thumbnail" : "",
+        "stock": 15
+    },
+    {
+        "sku": 2,
+        "name": "Body Shampoo",
+        "price": 21.49,
+        "weight": 2.3,
+        "descriptions": "Body shampoo",
+        "thumbnail" : "",
+        "stock": 10
+    },
+    {
+        "sku": 4,
+        "name": "camera",
+        "price": 425.49,
+        "weight": 10.5,
+        "descriptions": "Sony Camera",
+        "thumbnail" : "",
+        "stock": 77
+    },
+    {
+        "sku": 4,
+        "name": "sunglasses",
+        "price": 50.99,
+        "weight": 0.5,
+        "descriptions": "zenit sunglasses",
+        "thumbnail" : "",
+        "stock": 4
+    },
+    {
+        "sku": 5,
+        "name": "pen",
+        "price": 0.99,
+        "weight": 0.1,
+        "descriptions": "Blue pen",
+        "thumbnail" : "",
+        "stock": 10
+    },
+    {
+        "sku": 5,
+        "name": "Black Pen",
+        "price": 0.99,
+        "weight": 0.1,
+        "descriptions": "black pen",
+        "thumbnail" : "",
+        "stock": 10
+    },
+    {
+        "sku": 5,
+        "name": "Red Pen",
+        "price": 0.99,
+        "weight": 0.1,
+        "descriptions": "red pen",
+        "thumbnail" : "",
+        "stock": 10
+    }
+]

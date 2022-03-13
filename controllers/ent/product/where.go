@@ -94,7 +94,7 @@ func IDLTE(id int) predicate.Product {
 }
 
 // Sku applies equality check predicate on the "sku" field. It's identical to SkuEQ.
-func Sku(v string) predicate.Product {
+func Sku(v int) predicate.Product {
 	return predicate.Product(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldSku), v))
 	})
@@ -150,21 +150,21 @@ func Stock(v int) predicate.Product {
 }
 
 // SkuEQ applies the EQ predicate on the "sku" field.
-func SkuEQ(v string) predicate.Product {
+func SkuEQ(v int) predicate.Product {
 	return predicate.Product(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldSku), v))
 	})
 }
 
 // SkuNEQ applies the NEQ predicate on the "sku" field.
-func SkuNEQ(v string) predicate.Product {
+func SkuNEQ(v int) predicate.Product {
 	return predicate.Product(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldSku), v))
 	})
 }
 
 // SkuIn applies the In predicate on the "sku" field.
-func SkuIn(vs ...string) predicate.Product {
+func SkuIn(vs ...int) predicate.Product {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -181,7 +181,7 @@ func SkuIn(vs ...string) predicate.Product {
 }
 
 // SkuNotIn applies the NotIn predicate on the "sku" field.
-func SkuNotIn(vs ...string) predicate.Product {
+func SkuNotIn(vs ...int) predicate.Product {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -198,65 +198,30 @@ func SkuNotIn(vs ...string) predicate.Product {
 }
 
 // SkuGT applies the GT predicate on the "sku" field.
-func SkuGT(v string) predicate.Product {
+func SkuGT(v int) predicate.Product {
 	return predicate.Product(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldSku), v))
 	})
 }
 
 // SkuGTE applies the GTE predicate on the "sku" field.
-func SkuGTE(v string) predicate.Product {
+func SkuGTE(v int) predicate.Product {
 	return predicate.Product(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldSku), v))
 	})
 }
 
 // SkuLT applies the LT predicate on the "sku" field.
-func SkuLT(v string) predicate.Product {
+func SkuLT(v int) predicate.Product {
 	return predicate.Product(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldSku), v))
 	})
 }
 
 // SkuLTE applies the LTE predicate on the "sku" field.
-func SkuLTE(v string) predicate.Product {
+func SkuLTE(v int) predicate.Product {
 	return predicate.Product(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldSku), v))
-	})
-}
-
-// SkuContains applies the Contains predicate on the "sku" field.
-func SkuContains(v string) predicate.Product {
-	return predicate.Product(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldSku), v))
-	})
-}
-
-// SkuHasPrefix applies the HasPrefix predicate on the "sku" field.
-func SkuHasPrefix(v string) predicate.Product {
-	return predicate.Product(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldSku), v))
-	})
-}
-
-// SkuHasSuffix applies the HasSuffix predicate on the "sku" field.
-func SkuHasSuffix(v string) predicate.Product {
-	return predicate.Product(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldSku), v))
-	})
-}
-
-// SkuEqualFold applies the EqualFold predicate on the "sku" field.
-func SkuEqualFold(v string) predicate.Product {
-	return predicate.Product(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldSku), v))
-	})
-}
-
-// SkuContainsFold applies the ContainsFold predicate on the "sku" field.
-func SkuContainsFold(v string) predicate.Product {
-	return predicate.Product(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldSku), v))
 	})
 }
 

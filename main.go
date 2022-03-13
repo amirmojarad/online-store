@@ -6,7 +6,9 @@ import (
 	"log"
 	"online-supermarket/controllers/db"
 	"online-supermarket/controllers/ent"
+	"online-supermarket/controllers/file"
 	"online-supermarket/views/api"
+
 	"os"
 	"time"
 
@@ -19,8 +21,11 @@ import (
 // TODO adding gRPC
 // TODO Create a service for shared media
 
-func main() {
+func fillProductsTable(ctx *context.Context, client *ent.Client) {
+	file.FillProducts(client, ctx)
+}
 
+func main() {
 	dbConf := db.GetDatabaseConfig()
 	log.Println(dbConf.Username, dbConf.Dbname, dbConf.Password, "asd")
 	client, err := ent.Open("postgres", fmt.Sprintf("user=%s dbname=%s password=%s sslmode=disable", dbConf.Username, dbConf.Dbname, dbConf.Password))

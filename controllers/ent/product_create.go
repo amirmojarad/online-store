@@ -22,8 +22,8 @@ type ProductCreate struct {
 }
 
 // SetSku sets the "sku" field.
-func (pc *ProductCreate) SetSku(s string) *ProductCreate {
-	pc.mutation.SetSku(s)
+func (pc *ProductCreate) SetSku(i int) *ProductCreate {
+	pc.mutation.SetSku(i)
 	return pc
 }
 
@@ -236,7 +236,7 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 	)
 	if value, ok := pc.mutation.Sku(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
+			Type:   field.TypeInt,
 			Value:  value,
 			Column: product.FieldSku,
 		})

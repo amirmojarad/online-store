@@ -293,7 +293,7 @@ func (pq *ProductQuery) WithCategory(opts ...func(*CategoryQuery)) *ProductQuery
 // Example:
 //
 //	var v []struct {
-//		Sku string `json:"sku,omitempty"`
+//		Sku int `json:"sku,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
@@ -320,7 +320,7 @@ func (pq *ProductQuery) GroupBy(field string, fields ...string) *ProductGroupBy 
 // Example:
 //
 //	var v []struct {
-//		Sku string `json:"sku,omitempty"`
+//		Sku int `json:"sku,omitempty"`
 //	}
 //
 //	client.Product.Query().

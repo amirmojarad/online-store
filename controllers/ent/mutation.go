@@ -2059,7 +2059,8 @@ type ProductMutation struct {
 	op              Op
 	typ             string
 	id              *int
-	sku             *string
+	sku             *int
+	addsku          *int
 	name            *string
 	price           *float64
 	addprice        *float64
@@ -2178,12 +2179,13 @@ func (m *ProductMutation) IDs(ctx context.Context) ([]int, error) {
 }
 
 // SetSku sets the "sku" field.
-func (m *ProductMutation) SetSku(s string) {
-	m.sku = &s
+func (m *ProductMutation) SetSku(i int) {
+	m.sku = &i
+	m.addsku = nil
 }
 
 // Sku returns the value of the "sku" field in the mutation.
-func (m *ProductMutation) Sku() (r string, exists bool) {
+func (m *ProductMutation) Sku() (r int, exists bool) {
 	v := m.sku
 	if v == nil {
 		return
@@ -2194,7 +2196,7 @@ func (m *ProductMutation) Sku() (r string, exists bool) {
 // OldSku returns the old "sku" field's value of the Product entity.
 // If the Product object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ProductMutation) OldSku(ctx context.Context) (v string, err error) {
+func (m *ProductMutation) OldSku(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldSku is only allowed on UpdateOne operations")
 	}
@@ -2208,9 +2210,28 @@ func (m *ProductMutation) OldSku(ctx context.Context) (v string, err error) {
 	return oldValue.Sku, nil
 }
 
+// AddSku adds i to the "sku" field.
+func (m *ProductMutation) AddSku(i int) {
+	if m.addsku != nil {
+		*m.addsku += i
+	} else {
+		m.addsku = &i
+	}
+}
+
+// AddedSku returns the value that was added to the "sku" field in this mutation.
+func (m *ProductMutation) AddedSku() (r int, exists bool) {
+	v := m.addsku
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
 // ResetSku resets all changes to the "sku" field.
 func (m *ProductMutation) ResetSku() {
 	m.sku = nil
+	m.addsku = nil
 }
 
 // SetName sets the "name" field.
@@ -2682,7 +2703,7 @@ func (m *ProductMutation) OldField(ctx context.Context, name string) (ent.Value,
 func (m *ProductMutation) SetField(name string, value ent.Value) error {
 	switch name {
 	case product.FieldSku:
-		v, ok := value.(string)
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -2745,6 +2766,9 @@ func (m *ProductMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *ProductMutation) AddedFields() []string {
 	var fields []string
+	if m.addsku != nil {
+		fields = append(fields, product.FieldSku)
+	}
 	if m.addprice != nil {
 		fields = append(fields, product.FieldPrice)
 	}
@@ -2762,6 +2786,8 @@ func (m *ProductMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *ProductMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case product.FieldSku:
+		return m.AddedSku()
 	case product.FieldPrice:
 		return m.AddedPrice()
 	case product.FieldWeight:
@@ -2777,6 +2803,13 @@ func (m *ProductMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ProductMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case product.FieldSku:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSku(v)
+		return nil
 	case product.FieldPrice:
 		v, ok := value.(float64)
 		if !ok {
