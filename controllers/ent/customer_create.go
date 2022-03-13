@@ -7,6 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"online-supermarket/controllers/ent/customer"
+	"online-supermarket/controllers/ent/order"
+	"online-supermarket/controllers/ent/product"
+	"online-supermarket/controllers/ent/user"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -17,18 +20,6 @@ type CustomerCreate struct {
 	config
 	mutation *CustomerMutation
 	hooks    []Hook
-}
-
-// SetEmail sets the "email" field.
-func (cc *CustomerCreate) SetEmail(s string) *CustomerCreate {
-	cc.mutation.SetEmail(s)
-	return cc
-}
-
-// SetPassword sets the "password" field.
-func (cc *CustomerCreate) SetPassword(s string) *CustomerCreate {
-	cc.mutation.SetPassword(s)
-	return cc
 }
 
 // SetFullName sets the "full_name" field.
@@ -77,6 +68,62 @@ func (cc *CustomerCreate) SetNillableCountry(s *string) *CustomerCreate {
 func (cc *CustomerCreate) SetPhone(s string) *CustomerCreate {
 	cc.mutation.SetPhone(s)
 	return cc
+}
+
+// SetUserID sets the "user" edge to the User entity by ID.
+func (cc *CustomerCreate) SetUserID(id int) *CustomerCreate {
+	cc.mutation.SetUserID(id)
+	return cc
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (cc *CustomerCreate) SetUser(u *User) *CustomerCreate {
+	return cc.SetUserID(u.ID)
+}
+
+// AddPurchasedProductIDs adds the "purchased_products" edge to the Product entity by IDs.
+func (cc *CustomerCreate) AddPurchasedProductIDs(ids ...int) *CustomerCreate {
+	cc.mutation.AddPurchasedProductIDs(ids...)
+	return cc
+}
+
+// AddPurchasedProducts adds the "purchased_products" edges to the Product entity.
+func (cc *CustomerCreate) AddPurchasedProducts(p ...*Product) *CustomerCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cc.AddPurchasedProductIDs(ids...)
+}
+
+// AddCartProductIDs adds the "cart_products" edge to the Product entity by IDs.
+func (cc *CustomerCreate) AddCartProductIDs(ids ...int) *CustomerCreate {
+	cc.mutation.AddCartProductIDs(ids...)
+	return cc
+}
+
+// AddCartProducts adds the "cart_products" edges to the Product entity.
+func (cc *CustomerCreate) AddCartProducts(p ...*Product) *CustomerCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cc.AddCartProductIDs(ids...)
+}
+
+// AddOrderIDs adds the "orders" edge to the Order entity by IDs.
+func (cc *CustomerCreate) AddOrderIDs(ids ...int) *CustomerCreate {
+	cc.mutation.AddOrderIDs(ids...)
+	return cc
+}
+
+// AddOrders adds the "orders" edges to the Order entity.
+func (cc *CustomerCreate) AddOrders(o ...*Order) *CustomerCreate {
+	ids := make([]int, len(o))
+	for i := range o {
+		ids[i] = o[i].ID
+	}
+	return cc.AddOrderIDs(ids...)
 }
 
 // Mutation returns the CustomerMutation object of the builder.
@@ -149,19 +196,11 @@ func (cc *CustomerCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (cc *CustomerCreate) check() error {
-	if _, ok := cc.mutation.Email(); !ok {
-		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "Customer.email"`)}
-	}
-	if v, ok := cc.mutation.Email(); ok {
-		if err := customer.EmailValidator(v); err != nil {
-			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "Customer.email": %w`, err)}
-		}
-	}
-	if _, ok := cc.mutation.Password(); !ok {
-		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "Customer.password"`)}
-	}
 	if _, ok := cc.mutation.Phone(); !ok {
 		return &ValidationError{Name: "phone", err: errors.New(`ent: missing required field "Customer.phone"`)}
+	}
+	if _, ok := cc.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Customer.user"`)}
 	}
 	return nil
 }
@@ -190,22 +229,6 @@ func (cc *CustomerCreate) createSpec() (*Customer, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
-	if value, ok := cc.mutation.Email(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: customer.FieldEmail,
-		})
-		_node.Email = value
-	}
-	if value, ok := cc.mutation.Password(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: customer.FieldPassword,
-		})
-		_node.Password = value
-	}
 	if value, ok := cc.mutation.FullName(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -237,6 +260,83 @@ func (cc *CustomerCreate) createSpec() (*Customer, *sqlgraph.CreateSpec) {
 			Column: customer.FieldPhone,
 		})
 		_node.Phone = value
+	}
+	if nodes := cc.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: true,
+			Table:   customer.UserTable,
+			Columns: []string{customer.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_customer = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cc.mutation.PurchasedProductsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   customer.PurchasedProductsTable,
+			Columns: []string{customer.PurchasedProductsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: product.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cc.mutation.CartProductsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   customer.CartProductsTable,
+			Columns: []string{customer.CartProductsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: product.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cc.mutation.OrdersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   customer.OrdersTable,
+			Columns: []string{customer.OrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: order.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

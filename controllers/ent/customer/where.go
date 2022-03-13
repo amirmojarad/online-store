@@ -6,6 +6,7 @@ import (
 	"online-supermarket/controllers/ent/predicate"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -91,20 +92,6 @@ func IDLTE(id int) predicate.Customer {
 	})
 }
 
-// Email applies equality check predicate on the "email" field. It's identical to EmailEQ.
-func Email(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldEmail), v))
-	})
-}
-
-// Password applies equality check predicate on the "password" field. It's identical to PasswordEQ.
-func Password(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldPassword), v))
-	})
-}
-
 // FullName applies equality check predicate on the "full_name" field. It's identical to FullNameEQ.
 func FullName(v string) predicate.Customer {
 	return predicate.Customer(func(s *sql.Selector) {
@@ -130,228 +117,6 @@ func Country(v string) predicate.Customer {
 func Phone(v string) predicate.Customer {
 	return predicate.Customer(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldPhone), v))
-	})
-}
-
-// EmailEQ applies the EQ predicate on the "email" field.
-func EmailEQ(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldEmail), v))
-	})
-}
-
-// EmailNEQ applies the NEQ predicate on the "email" field.
-func EmailNEQ(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldEmail), v))
-	})
-}
-
-// EmailIn applies the In predicate on the "email" field.
-func EmailIn(vs ...string) predicate.Customer {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Customer(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldEmail), v...))
-	})
-}
-
-// EmailNotIn applies the NotIn predicate on the "email" field.
-func EmailNotIn(vs ...string) predicate.Customer {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Customer(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldEmail), v...))
-	})
-}
-
-// EmailGT applies the GT predicate on the "email" field.
-func EmailGT(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldEmail), v))
-	})
-}
-
-// EmailGTE applies the GTE predicate on the "email" field.
-func EmailGTE(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldEmail), v))
-	})
-}
-
-// EmailLT applies the LT predicate on the "email" field.
-func EmailLT(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldEmail), v))
-	})
-}
-
-// EmailLTE applies the LTE predicate on the "email" field.
-func EmailLTE(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldEmail), v))
-	})
-}
-
-// EmailContains applies the Contains predicate on the "email" field.
-func EmailContains(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldEmail), v))
-	})
-}
-
-// EmailHasPrefix applies the HasPrefix predicate on the "email" field.
-func EmailHasPrefix(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldEmail), v))
-	})
-}
-
-// EmailHasSuffix applies the HasSuffix predicate on the "email" field.
-func EmailHasSuffix(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldEmail), v))
-	})
-}
-
-// EmailEqualFold applies the EqualFold predicate on the "email" field.
-func EmailEqualFold(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldEmail), v))
-	})
-}
-
-// EmailContainsFold applies the ContainsFold predicate on the "email" field.
-func EmailContainsFold(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldEmail), v))
-	})
-}
-
-// PasswordEQ applies the EQ predicate on the "password" field.
-func PasswordEQ(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldPassword), v))
-	})
-}
-
-// PasswordNEQ applies the NEQ predicate on the "password" field.
-func PasswordNEQ(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldPassword), v))
-	})
-}
-
-// PasswordIn applies the In predicate on the "password" field.
-func PasswordIn(vs ...string) predicate.Customer {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Customer(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldPassword), v...))
-	})
-}
-
-// PasswordNotIn applies the NotIn predicate on the "password" field.
-func PasswordNotIn(vs ...string) predicate.Customer {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Customer(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldPassword), v...))
-	})
-}
-
-// PasswordGT applies the GT predicate on the "password" field.
-func PasswordGT(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldPassword), v))
-	})
-}
-
-// PasswordGTE applies the GTE predicate on the "password" field.
-func PasswordGTE(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldPassword), v))
-	})
-}
-
-// PasswordLT applies the LT predicate on the "password" field.
-func PasswordLT(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldPassword), v))
-	})
-}
-
-// PasswordLTE applies the LTE predicate on the "password" field.
-func PasswordLTE(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldPassword), v))
-	})
-}
-
-// PasswordContains applies the Contains predicate on the "password" field.
-func PasswordContains(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldPassword), v))
-	})
-}
-
-// PasswordHasPrefix applies the HasPrefix predicate on the "password" field.
-func PasswordHasPrefix(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldPassword), v))
-	})
-}
-
-// PasswordHasSuffix applies the HasSuffix predicate on the "password" field.
-func PasswordHasSuffix(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldPassword), v))
-	})
-}
-
-// PasswordEqualFold applies the EqualFold predicate on the "password" field.
-func PasswordEqualFold(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldPassword), v))
-	})
-}
-
-// PasswordContainsFold applies the ContainsFold predicate on the "password" field.
-func PasswordContainsFold(v string) predicate.Customer {
-	return predicate.Customer(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldPassword), v))
 	})
 }
 
@@ -838,6 +603,118 @@ func PhoneEqualFold(v string) predicate.Customer {
 func PhoneContainsFold(v string) predicate.Customer {
 	return predicate.Customer(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldPhone), v))
+	})
+}
+
+// HasUser applies the HasEdge predicate on the "user" edge.
+func HasUser() predicate.Customer {
+	return predicate.Customer(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(UserTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, UserTable, UserColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
+func HasUserWith(preds ...predicate.User) predicate.Customer {
+	return predicate.Customer(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(UserInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, UserTable, UserColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPurchasedProducts applies the HasEdge predicate on the "purchased_products" edge.
+func HasPurchasedProducts() predicate.Customer {
+	return predicate.Customer(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(PurchasedProductsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PurchasedProductsTable, PurchasedProductsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPurchasedProductsWith applies the HasEdge predicate on the "purchased_products" edge with a given conditions (other predicates).
+func HasPurchasedProductsWith(preds ...predicate.Product) predicate.Customer {
+	return predicate.Customer(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(PurchasedProductsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PurchasedProductsTable, PurchasedProductsColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCartProducts applies the HasEdge predicate on the "cart_products" edge.
+func HasCartProducts() predicate.Customer {
+	return predicate.Customer(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(CartProductsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CartProductsTable, CartProductsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCartProductsWith applies the HasEdge predicate on the "cart_products" edge with a given conditions (other predicates).
+func HasCartProductsWith(preds ...predicate.Product) predicate.Customer {
+	return predicate.Customer(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(CartProductsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CartProductsTable, CartProductsColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasOrders applies the HasEdge predicate on the "orders" edge.
+func HasOrders() predicate.Customer {
+	return predicate.Customer(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(OrdersTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, OrdersTable, OrdersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOrdersWith applies the HasEdge predicate on the "orders" edge with a given conditions (other predicates).
+func HasOrdersWith(preds ...predicate.Order) predicate.Customer {
+	return predicate.Customer(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(OrdersInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, OrdersTable, OrdersColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
 	})
 }
 

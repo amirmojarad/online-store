@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"online-supermarket/controllers/ent/customer"
+	"online-supermarket/controllers/ent/user"
 	"strings"
 
 	"entgo.io/ent/dialect/sql"
@@ -15,10 +16,6 @@ type Customer struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// Email holds the value of the "email" field.
-	Email string `json:"email,omitempty"`
-	// Password holds the value of the "password" field.
-	Password string `json:"password,omitempty"`
 	// FullName holds the value of the "full_name" field.
 	FullName string `json:"full_name,omitempty"`
 	// BillingAddress holds the value of the "billing_address" field.
@@ -27,6 +24,66 @@ type Customer struct {
 	Country string `json:"country,omitempty"`
 	// Phone holds the value of the "phone" field.
 	Phone string `json:"phone,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the CustomerQuery when eager-loading is set.
+	Edges         CustomerEdges `json:"edges"`
+	user_customer *int
+}
+
+// CustomerEdges holds the relations/edges for other nodes in the graph.
+type CustomerEdges struct {
+	// User holds the value of the user edge.
+	User *User `json:"user,omitempty"`
+	// PurchasedProducts holds the value of the purchased_products edge.
+	PurchasedProducts []*Product `json:"purchased_products,omitempty"`
+	// CartProducts holds the value of the cart_products edge.
+	CartProducts []*Product `json:"cart_products,omitempty"`
+	// Orders holds the value of the orders edge.
+	Orders []*Order `json:"orders,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [4]bool
+}
+
+// UserOrErr returns the User value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e CustomerEdges) UserOrErr() (*User, error) {
+	if e.loadedTypes[0] {
+		if e.User == nil {
+			// The edge user was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: user.Label}
+		}
+		return e.User, nil
+	}
+	return nil, &NotLoadedError{edge: "user"}
+}
+
+// PurchasedProductsOrErr returns the PurchasedProducts value or an error if the edge
+// was not loaded in eager-loading.
+func (e CustomerEdges) PurchasedProductsOrErr() ([]*Product, error) {
+	if e.loadedTypes[1] {
+		return e.PurchasedProducts, nil
+	}
+	return nil, &NotLoadedError{edge: "purchased_products"}
+}
+
+// CartProductsOrErr returns the CartProducts value or an error if the edge
+// was not loaded in eager-loading.
+func (e CustomerEdges) CartProductsOrErr() ([]*Product, error) {
+	if e.loadedTypes[2] {
+		return e.CartProducts, nil
+	}
+	return nil, &NotLoadedError{edge: "cart_products"}
+}
+
+// OrdersOrErr returns the Orders value or an error if the edge
+// was not loaded in eager-loading.
+func (e CustomerEdges) OrdersOrErr() ([]*Order, error) {
+	if e.loadedTypes[3] {
+		return e.Orders, nil
+	}
+	return nil, &NotLoadedError{edge: "orders"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -36,8 +93,10 @@ func (*Customer) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case customer.FieldID:
 			values[i] = new(sql.NullInt64)
-		case customer.FieldEmail, customer.FieldPassword, customer.FieldFullName, customer.FieldBillingAddress, customer.FieldCountry, customer.FieldPhone:
+		case customer.FieldFullName, customer.FieldBillingAddress, customer.FieldCountry, customer.FieldPhone:
 			values[i] = new(sql.NullString)
+		case customer.ForeignKeys[0]: // user_customer
+			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Customer", columns[i])
 		}
@@ -59,18 +118,6 @@ func (c *Customer) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			c.ID = int(value.Int64)
-		case customer.FieldEmail:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field email", values[i])
-			} else if value.Valid {
-				c.Email = value.String
-			}
-		case customer.FieldPassword:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field password", values[i])
-			} else if value.Valid {
-				c.Password = value.String
-			}
 		case customer.FieldFullName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field full_name", values[i])
@@ -95,9 +142,36 @@ func (c *Customer) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				c.Phone = value.String
 			}
+		case customer.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field user_customer", value)
+			} else if value.Valid {
+				c.user_customer = new(int)
+				*c.user_customer = int(value.Int64)
+			}
 		}
 	}
 	return nil
+}
+
+// QueryUser queries the "user" edge of the Customer entity.
+func (c *Customer) QueryUser() *UserQuery {
+	return (&CustomerClient{config: c.config}).QueryUser(c)
+}
+
+// QueryPurchasedProducts queries the "purchased_products" edge of the Customer entity.
+func (c *Customer) QueryPurchasedProducts() *ProductQuery {
+	return (&CustomerClient{config: c.config}).QueryPurchasedProducts(c)
+}
+
+// QueryCartProducts queries the "cart_products" edge of the Customer entity.
+func (c *Customer) QueryCartProducts() *ProductQuery {
+	return (&CustomerClient{config: c.config}).QueryCartProducts(c)
+}
+
+// QueryOrders queries the "orders" edge of the Customer entity.
+func (c *Customer) QueryOrders() *OrderQuery {
+	return (&CustomerClient{config: c.config}).QueryOrders(c)
 }
 
 // Update returns a builder for updating this Customer.
@@ -123,10 +197,6 @@ func (c *Customer) String() string {
 	var builder strings.Builder
 	builder.WriteString("Customer(")
 	builder.WriteString(fmt.Sprintf("id=%v", c.ID))
-	builder.WriteString(", email=")
-	builder.WriteString(c.Email)
-	builder.WriteString(", password=")
-	builder.WriteString(c.Password)
 	builder.WriteString(", full_name=")
 	builder.WriteString(c.FullName)
 	builder.WriteString(", billing_address=")

@@ -4,10 +4,10 @@ package ent
 
 import (
 	"online-supermarket/controllers/ent/category"
-	"online-supermarket/controllers/ent/customer"
 	"online-supermarket/controllers/ent/order"
 	"online-supermarket/controllers/ent/product"
 	"online-supermarket/controllers/ent/schema"
+	"online-supermarket/controllers/ent/user"
 	"time"
 )
 
@@ -29,12 +29,6 @@ func init() {
 	categoryDescThumbnail := categoryFields[2].Descriptor()
 	// category.ThumbnailValidator is a validator for the "thumbnail" field. It is called by the builders before save.
 	category.ThumbnailValidator = categoryDescThumbnail.Validators[0].(func(string) error)
-	customerFields := schema.Customer{}.Fields()
-	_ = customerFields
-	// customerDescEmail is the schema descriptor for email field.
-	customerDescEmail := customerFields[0].Descriptor()
-	// customer.EmailValidator is a validator for the "email" field. It is called by the builders before save.
-	customer.EmailValidator = customerDescEmail.Validators[0].(func(string) error)
 	orderFields := schema.Order{}.Fields()
 	_ = orderFields
 	// orderDescAmmount is the schema descriptor for ammount field.
@@ -55,4 +49,50 @@ func init() {
 	productDescStock := productFields[7].Descriptor()
 	// product.DefaultStock holds the default value on creation for the stock field.
 	product.DefaultStock = productDescStock.Default.(int)
+	userFields := schema.User{}.Fields()
+	_ = userFields
+	// userDescEmail is the schema descriptor for email field.
+	userDescEmail := userFields[0].Descriptor()
+	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	user.EmailValidator = func() func(string) error {
+		validators := userDescEmail.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(email string) error {
+			for _, fn := range fns {
+				if err := fn(email); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// userDescPassword is the schema descriptor for password field.
+	userDescPassword := userFields[1].Descriptor()
+	// user.PasswordValidator is a validator for the "password" field. It is called by the builders before save.
+	user.PasswordValidator = func() func(string) error {
+		validators := userDescPassword.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(password string) error {
+			for _, fn := range fns {
+				if err := fn(password); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// userDescCreatedAt is the schema descriptor for created_at field.
+	userDescCreatedAt := userFields[2].Descriptor()
+	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
+	user.DefaultCreatedAt = userDescCreatedAt.Default.(time.Time)
+	// userDescUpdatedAt is the schema descriptor for updated_at field.
+	userDescUpdatedAt := userFields[3].Descriptor()
+	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(time.Time)
 }

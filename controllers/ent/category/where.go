@@ -6,6 +6,7 @@ import (
 	"online-supermarket/controllers/ent/predicate"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -442,6 +443,34 @@ func ThumbnailEqualFold(v string) predicate.Category {
 func ThumbnailContainsFold(v string) predicate.Category {
 	return predicate.Category(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldThumbnail), v))
+	})
+}
+
+// HasProducts applies the HasEdge predicate on the "products" edge.
+func HasProducts() predicate.Category {
+	return predicate.Category(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ProductsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, ProductsTable, ProductsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasProductsWith applies the HasEdge predicate on the "products" edge with a given conditions (other predicates).
+func HasProductsWith(preds ...predicate.Product) predicate.Category {
+	return predicate.Category(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ProductsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, ProductsTable, ProductsPrimaryKey...),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
 	})
 }
 

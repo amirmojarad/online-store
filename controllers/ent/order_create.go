@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"online-supermarket/controllers/ent/order"
+	"online-supermarket/controllers/ent/product"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -56,6 +57,21 @@ func (oc *OrderCreate) SetNillableDate(t *time.Time) *OrderCreate {
 func (oc *OrderCreate) SetStatus(o order.Status) *OrderCreate {
 	oc.mutation.SetStatus(o)
 	return oc
+}
+
+// AddProductIDs adds the "products" edge to the Product entity by IDs.
+func (oc *OrderCreate) AddProductIDs(ids ...int) *OrderCreate {
+	oc.mutation.AddProductIDs(ids...)
+	return oc
+}
+
+// AddProducts adds the "products" edges to the Product entity.
+func (oc *OrderCreate) AddProducts(p ...*Product) *OrderCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return oc.AddProductIDs(ids...)
 }
 
 // Mutation returns the OrderMutation object of the builder.
@@ -228,6 +244,25 @@ func (oc *OrderCreate) createSpec() (*Order, *sqlgraph.CreateSpec) {
 			Column: order.FieldStatus,
 		})
 		_node.Status = value
+	}
+	if nodes := oc.mutation.ProductsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   order.ProductsTable,
+			Columns: []string{order.ProductsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: product.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

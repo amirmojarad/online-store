@@ -55,3 +55,34 @@ Product:
         +--------------+-----------+--------+----------+----------+---------+---------------+-----------+-------------------------------+------------+
 
 ```
+
+## API Routers
+- `Auth`
+```
+POST
+        - /users/login
+        - /users/signup
+```
+- `Customer`
+```
+POST
+        - /users
+        - /users/:id/orders
+        - /users/:id/purchase
+        - /users/:id/cart
+
+GET
+        - /users/:id/orders/
+        - /users/:id/purchase/:id
+        - /users/:id/purchase/all
+        - /users/:id/cart/:id
+        - /users/:id/cart/all
+
+DELETE
+        - /users/:id/orders/:id
+        - /users/:id/cart/:id
+        - /users/:id/purchase/:id
+
+PATCH
+        - /users/:id
+```

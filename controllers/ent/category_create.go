@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"online-supermarket/controllers/ent/category"
+	"online-supermarket/controllers/ent/product"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -35,6 +36,21 @@ func (cc *CategoryCreate) SetDescription(s string) *CategoryCreate {
 func (cc *CategoryCreate) SetThumbnail(s string) *CategoryCreate {
 	cc.mutation.SetThumbnail(s)
 	return cc
+}
+
+// AddProductIDs adds the "products" edge to the Product entity by IDs.
+func (cc *CategoryCreate) AddProductIDs(ids ...int) *CategoryCreate {
+	cc.mutation.AddProductIDs(ids...)
+	return cc
+}
+
+// AddProducts adds the "products" edges to the Product entity.
+func (cc *CategoryCreate) AddProducts(p ...*Product) *CategoryCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cc.AddProductIDs(ids...)
 }
 
 // Mutation returns the CategoryMutation object of the builder.
@@ -181,6 +197,25 @@ func (cc *CategoryCreate) createSpec() (*Category, *sqlgraph.CreateSpec) {
 			Column: category.FieldThumbnail,
 		})
 		_node.Thumbnail = value
+	}
+	if nodes := cc.mutation.ProductsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   category.ProductsTable,
+			Columns: category.ProductsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: product.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

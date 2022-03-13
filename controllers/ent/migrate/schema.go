@@ -24,18 +24,25 @@ var (
 	// CustomersColumns holds the columns for the "customers" table.
 	CustomersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "email", Type: field.TypeString, Unique: true},
-		{Name: "password", Type: field.TypeString},
 		{Name: "full_name", Type: field.TypeString, Nullable: true},
 		{Name: "billing_address", Type: field.TypeString, Nullable: true},
 		{Name: "country", Type: field.TypeString, Nullable: true},
 		{Name: "phone", Type: field.TypeString},
+		{Name: "user_customer", Type: field.TypeInt, Unique: true},
 	}
 	// CustomersTable holds the schema information for the "customers" table.
 	CustomersTable = &schema.Table{
 		Name:       "customers",
 		Columns:    CustomersColumns,
 		PrimaryKey: []*schema.Column{CustomersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "customers_users_customer",
+				Columns:    []*schema.Column{CustomersColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// OrdersColumns holds the columns for the "orders" table.
 	OrdersColumns = []*schema.Column{
@@ -45,12 +52,21 @@ var (
 		{Name: "email", Type: field.TypeString},
 		{Name: "date", Type: field.TypeTime},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"in_progress", "delivered", "referred", "canceled"}},
+		{Name: "customer_orders", Type: field.TypeInt, Nullable: true},
 	}
 	// OrdersTable holds the schema information for the "orders" table.
 	OrdersTable = &schema.Table{
 		Name:       "orders",
 		Columns:    OrdersColumns,
 		PrimaryKey: []*schema.Column{OrdersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "orders_customers_orders",
+				Columns:    []*schema.Column{OrdersColumns[6]},
+				RefColumns: []*schema.Column{CustomersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// ProductsColumns holds the columns for the "products" table.
 	ProductsColumns = []*schema.Column{
@@ -63,12 +79,74 @@ var (
 		{Name: "thumbnail", Type: field.TypeString},
 		{Name: "create_date", Type: field.TypeTime},
 		{Name: "stock", Type: field.TypeInt, Default: 0},
+		{Name: "customer_purchased_products", Type: field.TypeInt, Nullable: true},
+		{Name: "customer_cart_products", Type: field.TypeInt, Nullable: true},
+		{Name: "order_products", Type: field.TypeInt, Nullable: true},
 	}
 	// ProductsTable holds the schema information for the "products" table.
 	ProductsTable = &schema.Table{
 		Name:       "products",
 		Columns:    ProductsColumns,
 		PrimaryKey: []*schema.Column{ProductsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "products_customers_purchased_products",
+				Columns:    []*schema.Column{ProductsColumns[9]},
+				RefColumns: []*schema.Column{CustomersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "products_customers_cart_products",
+				Columns:    []*schema.Column{ProductsColumns[10]},
+				RefColumns: []*schema.Column{CustomersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "products_orders_products",
+				Columns:    []*schema.Column{ProductsColumns[11]},
+				RefColumns: []*schema.Column{OrdersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// UsersColumns holds the columns for the "users" table.
+	UsersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "password", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// UsersTable holds the schema information for the "users" table.
+	UsersTable = &schema.Table{
+		Name:       "users",
+		Columns:    UsersColumns,
+		PrimaryKey: []*schema.Column{UsersColumns[0]},
+	}
+	// CategoryProductsColumns holds the columns for the "category_products" table.
+	CategoryProductsColumns = []*schema.Column{
+		{Name: "category_id", Type: field.TypeInt},
+		{Name: "product_id", Type: field.TypeInt},
+	}
+	// CategoryProductsTable holds the schema information for the "category_products" table.
+	CategoryProductsTable = &schema.Table{
+		Name:       "category_products",
+		Columns:    CategoryProductsColumns,
+		PrimaryKey: []*schema.Column{CategoryProductsColumns[0], CategoryProductsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "category_products_category_id",
+				Columns:    []*schema.Column{CategoryProductsColumns[0]},
+				RefColumns: []*schema.Column{CategoriesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "category_products_product_id",
+				Columns:    []*schema.Column{CategoryProductsColumns[1]},
+				RefColumns: []*schema.Column{ProductsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
@@ -76,8 +154,17 @@ var (
 		CustomersTable,
 		OrdersTable,
 		ProductsTable,
+		UsersTable,
+		CategoryProductsTable,
 	}
 )
 
 func init() {
+	CustomersTable.ForeignKeys[0].RefTable = UsersTable
+	OrdersTable.ForeignKeys[0].RefTable = CustomersTable
+	ProductsTable.ForeignKeys[0].RefTable = CustomersTable
+	ProductsTable.ForeignKeys[1].RefTable = CustomersTable
+	ProductsTable.ForeignKeys[2].RefTable = OrdersTable
+	CategoryProductsTable.ForeignKeys[0].RefTable = CategoriesTable
+	CategoryProductsTable.ForeignKeys[1].RefTable = ProductsTable
 }

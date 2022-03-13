@@ -19,8 +19,19 @@ func RunAPI(ctx context.Context, client *ent.Client) {
 	api.Router.Use(gin.Logger())
 	api.Router.Use(gin.Recovery())
 
-	api.Login("/login")
-	api.SignUp("/signup")
+	api.LoginUser("/users/login")
+	api.SignUpUser("/users/signup")
+
+	// api.POSTCustomer("/users")
+	// api.GETCustomer("/users")
+	// api.PATCHCustomer("/users")
+	// api.GETPurchasedProducts("/users/producst")
+	// api.POSTPurchasedProducts("/users/producst")
+
+	// api.GETCustomerOrders("/users/orders")
+
+	// api.POSTProduct("/products")
+	// api.GETProducts("/products")
 
 	api.POSTCategory("/category")
 	api.GETCategories("/category")

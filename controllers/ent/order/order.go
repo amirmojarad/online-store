@@ -22,8 +22,17 @@ const (
 	FieldDate = "date"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// EdgeProducts holds the string denoting the products edge name in mutations.
+	EdgeProducts = "products"
 	// Table holds the table name of the order in the database.
 	Table = "orders"
+	// ProductsTable is the table that holds the products relation/edge.
+	ProductsTable = "products"
+	// ProductsInverseTable is the table name for the Product entity.
+	// It exists in this package in order to avoid circular dependency with the "product" package.
+	ProductsInverseTable = "products"
+	// ProductsColumn is the table column denoting the products relation/edge.
+	ProductsColumn = "order_products"
 )
 
 // Columns holds all SQL columns for order fields.
@@ -36,10 +45,21 @@ var Columns = []string{
 	FieldStatus,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "orders"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"customer_orders",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}

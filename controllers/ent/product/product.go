@@ -27,8 +27,15 @@ const (
 	FieldCreateDate = "create_date"
 	// FieldStock holds the string denoting the stock field in the database.
 	FieldStock = "stock"
+	// EdgeCategory holds the string denoting the category edge name in mutations.
+	EdgeCategory = "category"
 	// Table holds the table name of the product in the database.
 	Table = "products"
+	// CategoryTable is the table that holds the category relation/edge. The primary key declared below.
+	CategoryTable = "category_products"
+	// CategoryInverseTable is the table name for the Category entity.
+	// It exists in this package in order to avoid circular dependency with the "category" package.
+	CategoryInverseTable = "categories"
 )
 
 // Columns holds all SQL columns for product fields.
@@ -44,10 +51,29 @@ var Columns = []string{
 	FieldStock,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "products"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"customer_purchased_products",
+	"customer_cart_products",
+	"order_products",
+}
+
+var (
+	// CategoryPrimaryKey and CategoryColumn2 are the table columns denoting the
+	// primary key for the category relation (M2M).
+	CategoryPrimaryKey = []string{"category_id", "product_id"}
+)
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}

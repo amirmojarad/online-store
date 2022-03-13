@@ -3,34 +3,46 @@ package crud
 import (
 	"log"
 	"online-supermarket/controllers/ent"
-	"online-supermarket/controllers/ent/customer"
-	"online-supermarket/utils"
 )
 
-func (crud *Crud) AddUser(customer *ent.Customer) (*ent.Customer, error) {
-	hashedPassword, _ := utils.HashPassword(customer.Password)
-	if createdCustomer, err := crud.Client.Customer.Create().
-		SetBillingAddress(customer.BillingAddress).
-		SetCountry(customer.Country).
-		SetEmail(customer.Email).
-		SetFullName(customer.FullName).
-		SetPassword(hashedPassword).
-		SetPhone(customer.Phone).
-		Save(crud.Ctx); err != nil {
-		log.Println("on AddUser Function in controllers/crud/Customer.go: ", err)
+func (crud Crud) AddCustomer(u *ent.User, phone string) (*ent.Customer, error) {
+	newCustomer, err := crud.Client.Customer.Create().
+		SetPhone(phone).SetUser(u).Save(crud.Ctx)
+	if err != nil {
+		log.Println("on AddCustomer in controllers/db/crud/customer.go: ", err)
+		return nil, err
+	}
+	return newCustomer, nil
+}
+
+func (crud Crud) GetCustomer(id int) (*ent.Customer, error) {
+	if fetchedCustomer, err := crud.Client.Customer.Get(crud.Ctx, id); err != nil {
+		log.Println("on GetCustomer in controllers/db/crud/customer.go: ", err)
 		return nil, err
 	} else {
-		return createdCustomer, nil
+		return fetchedCustomer, nil
 	}
 }
 
-func (crud *Crud) GetUserByEmail(email string) (*ent.Customer, error) {
-	if fetchedUser, err := crud.Client.Customer.Query().
-		Select(customer.FieldEmail, customer.FieldPassword, customer.FieldID).
-		First(crud.Ctx); err != nil {
-		log.Println("on GetUserByEmail Function in controllers/db/crud/customer.go: ", err)
+func (crud Crud) GetOrdersOfUser(id int) ([]*ent.Order, error) {
+	if orders, err := crud.Client.Customer.Query().QueryOrders().All(crud.Ctx); err != nil {
+		log.Println("on AddOrder() in controllers/db/crud/order.go: ", err)
 		return nil, err
 	} else {
-		return fetchedUser, nil
+		return orders, nil
+	}
+}
+
+func (crud Crud) GetPurchasedProducts(id int) ([]*ent.Product, error) {
+	if fetchedCustomer, err := crud.GetCustomer(id); err != nil {
+		log.Println("on GetPurchasedProducts() in controllers/db/crud/order.go: ", err)
+		return nil, err
+	} else {
+		if products, err := fetchedCustomer.QueryPurchasedProducts().All(crud.Ctx); err != nil {
+			log.Println("on GetPurchasedProducts() in controllers/db/crud/order.go: ", err)
+			return nil, err
+		} else {
+			return products, err
+		}
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"online-supermarket/controllers/ent/customer"
 	"online-supermarket/controllers/ent/order"
 	"online-supermarket/controllers/ent/product"
+	"online-supermarket/controllers/ent/user"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -36,6 +37,7 @@ func columnChecker(table string) func(string) error {
 		customer.Table: customer.ValidColumn,
 		order.Table:    order.ValidColumn,
 		product.Table:  product.ValidColumn,
+		user.Table:     user.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

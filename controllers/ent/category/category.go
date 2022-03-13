@@ -13,8 +13,15 @@ const (
 	FieldDescription = "description"
 	// FieldThumbnail holds the string denoting the thumbnail field in the database.
 	FieldThumbnail = "thumbnail"
+	// EdgeProducts holds the string denoting the products edge name in mutations.
+	EdgeProducts = "products"
 	// Table holds the table name of the category in the database.
 	Table = "categories"
+	// ProductsTable is the table that holds the products relation/edge. The primary key declared below.
+	ProductsTable = "category_products"
+	// ProductsInverseTable is the table name for the Product entity.
+	// It exists in this package in order to avoid circular dependency with the "product" package.
+	ProductsInverseTable = "products"
 )
 
 // Columns holds all SQL columns for category fields.
@@ -24,6 +31,12 @@ var Columns = []string{
 	FieldDescription,
 	FieldThumbnail,
 }
+
+var (
+	// ProductsPrimaryKey and ProductsColumn2 are the table columns denoting the
+	// primary key for the products relation (M2M).
+	ProductsPrimaryKey = []string{"category_id", "product_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {

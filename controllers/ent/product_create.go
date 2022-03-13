@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"online-supermarket/controllers/ent/category"
 	"online-supermarket/controllers/ent/product"
 	"time"
 
@@ -82,6 +83,21 @@ func (pc *ProductCreate) SetNillableStock(i *int) *ProductCreate {
 		pc.SetStock(*i)
 	}
 	return pc
+}
+
+// AddCategoryIDs adds the "category" edge to the Category entity by IDs.
+func (pc *ProductCreate) AddCategoryIDs(ids ...int) *ProductCreate {
+	pc.mutation.AddCategoryIDs(ids...)
+	return pc
+}
+
+// AddCategory adds the "category" edges to the Category entity.
+func (pc *ProductCreate) AddCategory(c ...*Category) *ProductCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return pc.AddCategoryIDs(ids...)
 }
 
 // Mutation returns the ProductMutation object of the builder.
@@ -281,6 +297,25 @@ func (pc *ProductCreate) createSpec() (*Product, *sqlgraph.CreateSpec) {
 			Column: product.FieldStock,
 		})
 		_node.Stock = value
+	}
+	if nodes := pc.mutation.CategoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   product.CategoryTable,
+			Columns: product.CategoryPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

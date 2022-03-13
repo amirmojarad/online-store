@@ -26,6 +26,28 @@ type Order struct {
 	Date time.Time `json:"date,omitempty"`
 	// Status holds the value of the "status" field.
 	Status order.Status `json:"status,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the OrderQuery when eager-loading is set.
+	Edges           OrderEdges `json:"edges"`
+	customer_orders *int
+}
+
+// OrderEdges holds the relations/edges for other nodes in the graph.
+type OrderEdges struct {
+	// Products holds the value of the products edge.
+	Products []*Product `json:"products,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// ProductsOrErr returns the Products value or an error if the edge
+// was not loaded in eager-loading.
+func (e OrderEdges) ProductsOrErr() ([]*Product, error) {
+	if e.loadedTypes[0] {
+		return e.Products, nil
+	}
+	return nil, &NotLoadedError{edge: "products"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -41,6 +63,8 @@ func (*Order) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullString)
 		case order.FieldDate:
 			values[i] = new(sql.NullTime)
+		case order.ForeignKeys[0]: // customer_orders
+			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Order", columns[i])
 		}
@@ -92,9 +116,21 @@ func (o *Order) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				o.Status = order.Status(value.String)
 			}
+		case order.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field customer_orders", value)
+			} else if value.Valid {
+				o.customer_orders = new(int)
+				*o.customer_orders = int(value.Int64)
+			}
 		}
 	}
 	return nil
+}
+
+// QueryProducts queries the "products" edge of the Order entity.
+func (o *Order) QueryProducts() *ProductQuery {
+	return (&OrderClient{config: o.config}).QueryProducts(o)
 }
 
 // Update returns a builder for updating this Order.

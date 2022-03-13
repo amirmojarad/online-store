@@ -32,6 +32,30 @@ type Product struct {
 	CreateDate time.Time `json:"create_date,omitempty"`
 	// Stock holds the value of the "stock" field.
 	Stock int `json:"stock,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ProductQuery when eager-loading is set.
+	Edges                       ProductEdges `json:"edges"`
+	customer_purchased_products *int
+	customer_cart_products      *int
+	order_products              *int
+}
+
+// ProductEdges holds the relations/edges for other nodes in the graph.
+type ProductEdges struct {
+	// Category holds the value of the category edge.
+	Category []*Category `json:"category,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// CategoryOrErr returns the Category value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProductEdges) CategoryOrErr() ([]*Category, error) {
+	if e.loadedTypes[0] {
+		return e.Category, nil
+	}
+	return nil, &NotLoadedError{edge: "category"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -47,6 +71,12 @@ func (*Product) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullString)
 		case product.FieldCreateDate:
 			values[i] = new(sql.NullTime)
+		case product.ForeignKeys[0]: // customer_purchased_products
+			values[i] = new(sql.NullInt64)
+		case product.ForeignKeys[1]: // customer_cart_products
+			values[i] = new(sql.NullInt64)
+		case product.ForeignKeys[2]: // order_products
+			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Product", columns[i])
 		}
@@ -116,9 +146,35 @@ func (pr *Product) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				pr.Stock = int(value.Int64)
 			}
+		case product.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field customer_purchased_products", value)
+			} else if value.Valid {
+				pr.customer_purchased_products = new(int)
+				*pr.customer_purchased_products = int(value.Int64)
+			}
+		case product.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field customer_cart_products", value)
+			} else if value.Valid {
+				pr.customer_cart_products = new(int)
+				*pr.customer_cart_products = int(value.Int64)
+			}
+		case product.ForeignKeys[2]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field order_products", value)
+			} else if value.Valid {
+				pr.order_products = new(int)
+				*pr.order_products = int(value.Int64)
+			}
 		}
 	}
 	return nil
+}
+
+// QueryCategory queries the "category" edge of the Product entity.
+func (pr *Product) QueryCategory() *CategoryQuery {
+	return (&ProductClient{config: pr.config}).QueryCategory(pr)
 }
 
 // Update returns a builder for updating this Product.

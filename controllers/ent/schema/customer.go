@@ -1,21 +1,10 @@
 package schema
 
 import (
-	"fmt"
-	"net/mail"
-
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
-
-func ValidateEmail() func(email string) error {
-	return func(email string) error {
-		if _, err := mail.ParseAddress(email); err != nil {
-			return fmt.Errorf("%s is not a valid email", email)
-		}
-		return nil
-	}
-}
 
 // Customer holds the schema definition for the Customer entity.
 type Customer struct {
@@ -25,8 +14,6 @@ type Customer struct {
 // Fields of the Customer.
 func (Customer) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("email").Validate(ValidateEmail()).Unique(),
-		field.String("password"),
 		field.String("full_name").Optional(),
 		field.String("billing_address").Optional(),
 		field.String("country").Optional(),
@@ -36,5 +23,10 @@ func (Customer) Fields() []ent.Field {
 
 // Edges of the Customer.
 func (Customer) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.From("user", User.Type).Ref("customer").Unique().Required(),
+		edge.To("purchased_products", Product.Type),
+		edge.To("cart_products", Product.Type),
+		edge.To("orders", Order.Type),
+	}
 }

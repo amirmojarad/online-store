@@ -4,11 +4,15 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
 	"online-supermarket/controllers/ent/customer"
+	"online-supermarket/controllers/ent/order"
 	"online-supermarket/controllers/ent/predicate"
+	"online-supermarket/controllers/ent/product"
+	"online-supermarket/controllers/ent/user"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -24,6 +28,12 @@ type CustomerQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Customer
+	// eager-loading edges.
+	withUser              *UserQuery
+	withPurchasedProducts *ProductQuery
+	withCartProducts      *ProductQuery
+	withOrders            *OrderQuery
+	withFKs               bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -58,6 +68,94 @@ func (cq *CustomerQuery) Unique(unique bool) *CustomerQuery {
 func (cq *CustomerQuery) Order(o ...OrderFunc) *CustomerQuery {
 	cq.order = append(cq.order, o...)
 	return cq
+}
+
+// QueryUser chains the current query on the "user" edge.
+func (cq *CustomerQuery) QueryUser() *UserQuery {
+	query := &UserQuery{config: cq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(customer.Table, customer.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, customer.UserTable, customer.UserColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPurchasedProducts chains the current query on the "purchased_products" edge.
+func (cq *CustomerQuery) QueryPurchasedProducts() *ProductQuery {
+	query := &ProductQuery{config: cq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(customer.Table, customer.FieldID, selector),
+			sqlgraph.To(product.Table, product.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, customer.PurchasedProductsTable, customer.PurchasedProductsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCartProducts chains the current query on the "cart_products" edge.
+func (cq *CustomerQuery) QueryCartProducts() *ProductQuery {
+	query := &ProductQuery{config: cq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(customer.Table, customer.FieldID, selector),
+			sqlgraph.To(product.Table, product.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, customer.CartProductsTable, customer.CartProductsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryOrders chains the current query on the "orders" edge.
+func (cq *CustomerQuery) QueryOrders() *OrderQuery {
+	query := &OrderQuery{config: cq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(customer.Table, customer.FieldID, selector),
+			sqlgraph.To(order.Table, order.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, customer.OrdersTable, customer.OrdersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Customer entity from the query.
@@ -236,16 +334,64 @@ func (cq *CustomerQuery) Clone() *CustomerQuery {
 		return nil
 	}
 	return &CustomerQuery{
-		config:     cq.config,
-		limit:      cq.limit,
-		offset:     cq.offset,
-		order:      append([]OrderFunc{}, cq.order...),
-		predicates: append([]predicate.Customer{}, cq.predicates...),
+		config:                cq.config,
+		limit:                 cq.limit,
+		offset:                cq.offset,
+		order:                 append([]OrderFunc{}, cq.order...),
+		predicates:            append([]predicate.Customer{}, cq.predicates...),
+		withUser:              cq.withUser.Clone(),
+		withPurchasedProducts: cq.withPurchasedProducts.Clone(),
+		withCartProducts:      cq.withCartProducts.Clone(),
+		withOrders:            cq.withOrders.Clone(),
 		// clone intermediate query.
 		sql:    cq.sql.Clone(),
 		path:   cq.path,
 		unique: cq.unique,
 	}
+}
+
+// WithUser tells the query-builder to eager-load the nodes that are connected to
+// the "user" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *CustomerQuery) WithUser(opts ...func(*UserQuery)) *CustomerQuery {
+	query := &UserQuery{config: cq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withUser = query
+	return cq
+}
+
+// WithPurchasedProducts tells the query-builder to eager-load the nodes that are connected to
+// the "purchased_products" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *CustomerQuery) WithPurchasedProducts(opts ...func(*ProductQuery)) *CustomerQuery {
+	query := &ProductQuery{config: cq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withPurchasedProducts = query
+	return cq
+}
+
+// WithCartProducts tells the query-builder to eager-load the nodes that are connected to
+// the "cart_products" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *CustomerQuery) WithCartProducts(opts ...func(*ProductQuery)) *CustomerQuery {
+	query := &ProductQuery{config: cq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withCartProducts = query
+	return cq
+}
+
+// WithOrders tells the query-builder to eager-load the nodes that are connected to
+// the "orders" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *CustomerQuery) WithOrders(opts ...func(*OrderQuery)) *CustomerQuery {
+	query := &OrderQuery{config: cq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withOrders = query
+	return cq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -254,12 +400,12 @@ func (cq *CustomerQuery) Clone() *CustomerQuery {
 // Example:
 //
 //	var v []struct {
-//		Email string `json:"email,omitempty"`
+//		FullName string `json:"full_name,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Customer.Query().
-//		GroupBy(customer.FieldEmail).
+//		GroupBy(customer.FieldFullName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -281,11 +427,11 @@ func (cq *CustomerQuery) GroupBy(field string, fields ...string) *CustomerGroupB
 // Example:
 //
 //	var v []struct {
-//		Email string `json:"email,omitempty"`
+//		FullName string `json:"full_name,omitempty"`
 //	}
 //
 //	client.Customer.Query().
-//		Select(customer.FieldEmail).
+//		Select(customer.FieldFullName).
 //		Scan(ctx, &v)
 //
 func (cq *CustomerQuery) Select(fields ...string) *CustomerSelect {
@@ -311,9 +457,22 @@ func (cq *CustomerQuery) prepareQuery(ctx context.Context) error {
 
 func (cq *CustomerQuery) sqlAll(ctx context.Context) ([]*Customer, error) {
 	var (
-		nodes = []*Customer{}
-		_spec = cq.querySpec()
+		nodes       = []*Customer{}
+		withFKs     = cq.withFKs
+		_spec       = cq.querySpec()
+		loadedTypes = [4]bool{
+			cq.withUser != nil,
+			cq.withPurchasedProducts != nil,
+			cq.withCartProducts != nil,
+			cq.withOrders != nil,
+		}
 	)
+	if cq.withUser != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, customer.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &Customer{config: cq.config}
 		nodes = append(nodes, node)
@@ -324,6 +483,7 @@ func (cq *CustomerQuery) sqlAll(ctx context.Context) ([]*Customer, error) {
 			return fmt.Errorf("ent: Assign called without calling ScanValues")
 		}
 		node := nodes[len(nodes)-1]
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	if err := sqlgraph.QueryNodes(ctx, cq.driver, _spec); err != nil {
@@ -332,6 +492,123 @@ func (cq *CustomerQuery) sqlAll(ctx context.Context) ([]*Customer, error) {
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+
+	if query := cq.withUser; query != nil {
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Customer)
+		for i := range nodes {
+			if nodes[i].user_customer == nil {
+				continue
+			}
+			fk := *nodes[i].user_customer
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
+		}
+		query.Where(user.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "user_customer" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.User = n
+			}
+		}
+	}
+
+	if query := cq.withPurchasedProducts; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*Customer)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.PurchasedProducts = []*Product{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Product(func(s *sql.Selector) {
+			s.Where(sql.InValues(customer.PurchasedProductsColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.customer_purchased_products
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "customer_purchased_products" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "customer_purchased_products" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.PurchasedProducts = append(node.Edges.PurchasedProducts, n)
+		}
+	}
+
+	if query := cq.withCartProducts; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*Customer)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.CartProducts = []*Product{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Product(func(s *sql.Selector) {
+			s.Where(sql.InValues(customer.CartProductsColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.customer_cart_products
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "customer_cart_products" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "customer_cart_products" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.CartProducts = append(node.Edges.CartProducts, n)
+		}
+	}
+
+	if query := cq.withOrders; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*Customer)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Orders = []*Order{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Order(func(s *sql.Selector) {
+			s.Where(sql.InValues(customer.OrdersColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.customer_orders
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "customer_orders" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "customer_orders" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Orders = append(node.Edges.Orders, n)
+		}
+	}
+
 	return nodes, nil
 }
 

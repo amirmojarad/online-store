@@ -7,10 +7,6 @@ const (
 	Label = "customer"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldEmail holds the string denoting the email field in the database.
-	FieldEmail = "email"
-	// FieldPassword holds the string denoting the password field in the database.
-	FieldPassword = "password"
 	// FieldFullName holds the string denoting the full_name field in the database.
 	FieldFullName = "full_name"
 	// FieldBillingAddress holds the string denoting the billing_address field in the database.
@@ -19,19 +15,59 @@ const (
 	FieldCountry = "country"
 	// FieldPhone holds the string denoting the phone field in the database.
 	FieldPhone = "phone"
+	// EdgeUser holds the string denoting the user edge name in mutations.
+	EdgeUser = "user"
+	// EdgePurchasedProducts holds the string denoting the purchased_products edge name in mutations.
+	EdgePurchasedProducts = "purchased_products"
+	// EdgeCartProducts holds the string denoting the cart_products edge name in mutations.
+	EdgeCartProducts = "cart_products"
+	// EdgeOrders holds the string denoting the orders edge name in mutations.
+	EdgeOrders = "orders"
 	// Table holds the table name of the customer in the database.
 	Table = "customers"
+	// UserTable is the table that holds the user relation/edge.
+	UserTable = "customers"
+	// UserInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	UserInverseTable = "users"
+	// UserColumn is the table column denoting the user relation/edge.
+	UserColumn = "user_customer"
+	// PurchasedProductsTable is the table that holds the purchased_products relation/edge.
+	PurchasedProductsTable = "products"
+	// PurchasedProductsInverseTable is the table name for the Product entity.
+	// It exists in this package in order to avoid circular dependency with the "product" package.
+	PurchasedProductsInverseTable = "products"
+	// PurchasedProductsColumn is the table column denoting the purchased_products relation/edge.
+	PurchasedProductsColumn = "customer_purchased_products"
+	// CartProductsTable is the table that holds the cart_products relation/edge.
+	CartProductsTable = "products"
+	// CartProductsInverseTable is the table name for the Product entity.
+	// It exists in this package in order to avoid circular dependency with the "product" package.
+	CartProductsInverseTable = "products"
+	// CartProductsColumn is the table column denoting the cart_products relation/edge.
+	CartProductsColumn = "customer_cart_products"
+	// OrdersTable is the table that holds the orders relation/edge.
+	OrdersTable = "orders"
+	// OrdersInverseTable is the table name for the Order entity.
+	// It exists in this package in order to avoid circular dependency with the "order" package.
+	OrdersInverseTable = "orders"
+	// OrdersColumn is the table column denoting the orders relation/edge.
+	OrdersColumn = "customer_orders"
 )
 
 // Columns holds all SQL columns for customer fields.
 var Columns = []string{
 	FieldID,
-	FieldEmail,
-	FieldPassword,
 	FieldFullName,
 	FieldBillingAddress,
 	FieldCountry,
 	FieldPhone,
+}
+
+// ForeignKeys holds the SQL foreign-keys that are owned by the "customers"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"user_customer",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -41,10 +77,10 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
+			return true
+		}
+	}
 	return false
 }
-
-var (
-	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
-	EmailValidator func(string) error
-)

@@ -4,11 +4,13 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
 	"online-supermarket/controllers/ent/order"
 	"online-supermarket/controllers/ent/predicate"
+	"online-supermarket/controllers/ent/product"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -24,6 +26,9 @@ type OrderQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Order
+	// eager-loading edges.
+	withProducts *ProductQuery
+	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -58,6 +63,28 @@ func (oq *OrderQuery) Unique(unique bool) *OrderQuery {
 func (oq *OrderQuery) Order(o ...OrderFunc) *OrderQuery {
 	oq.order = append(oq.order, o...)
 	return oq
+}
+
+// QueryProducts chains the current query on the "products" edge.
+func (oq *OrderQuery) QueryProducts() *ProductQuery {
+	query := &ProductQuery{config: oq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := oq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := oq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(order.Table, order.FieldID, selector),
+			sqlgraph.To(product.Table, product.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, order.ProductsTable, order.ProductsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Order entity from the query.
@@ -236,16 +263,28 @@ func (oq *OrderQuery) Clone() *OrderQuery {
 		return nil
 	}
 	return &OrderQuery{
-		config:     oq.config,
-		limit:      oq.limit,
-		offset:     oq.offset,
-		order:      append([]OrderFunc{}, oq.order...),
-		predicates: append([]predicate.Order{}, oq.predicates...),
+		config:       oq.config,
+		limit:        oq.limit,
+		offset:       oq.offset,
+		order:        append([]OrderFunc{}, oq.order...),
+		predicates:   append([]predicate.Order{}, oq.predicates...),
+		withProducts: oq.withProducts.Clone(),
 		// clone intermediate query.
 		sql:    oq.sql.Clone(),
 		path:   oq.path,
 		unique: oq.unique,
 	}
+}
+
+// WithProducts tells the query-builder to eager-load the nodes that are connected to
+// the "products" edge. The optional arguments are used to configure the query builder of the edge.
+func (oq *OrderQuery) WithProducts(opts ...func(*ProductQuery)) *OrderQuery {
+	query := &ProductQuery{config: oq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	oq.withProducts = query
+	return oq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -311,9 +350,16 @@ func (oq *OrderQuery) prepareQuery(ctx context.Context) error {
 
 func (oq *OrderQuery) sqlAll(ctx context.Context) ([]*Order, error) {
 	var (
-		nodes = []*Order{}
-		_spec = oq.querySpec()
+		nodes       = []*Order{}
+		withFKs     = oq.withFKs
+		_spec       = oq.querySpec()
+		loadedTypes = [1]bool{
+			oq.withProducts != nil,
+		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, order.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &Order{config: oq.config}
 		nodes = append(nodes, node)
@@ -324,6 +370,7 @@ func (oq *OrderQuery) sqlAll(ctx context.Context) ([]*Order, error) {
 			return fmt.Errorf("ent: Assign called without calling ScanValues")
 		}
 		node := nodes[len(nodes)-1]
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	if err := sqlgraph.QueryNodes(ctx, oq.driver, _spec); err != nil {
@@ -332,6 +379,36 @@ func (oq *OrderQuery) sqlAll(ctx context.Context) ([]*Order, error) {
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+
+	if query := oq.withProducts; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*Order)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Products = []*Product{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Product(func(s *sql.Selector) {
+			s.Where(sql.InValues(order.ProductsColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.order_products
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "order_products" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "order_products" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Products = append(node.Edges.Products, n)
+		}
+	}
+
 	return nodes, nil
 }
 

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"online-supermarket/controllers/ent/category"
 	"online-supermarket/controllers/ent/predicate"
 	"online-supermarket/controllers/ent/product"
 	"time"
@@ -113,9 +114,45 @@ func (pu *ProductUpdate) AddStock(i int) *ProductUpdate {
 	return pu
 }
 
+// AddCategoryIDs adds the "category" edge to the Category entity by IDs.
+func (pu *ProductUpdate) AddCategoryIDs(ids ...int) *ProductUpdate {
+	pu.mutation.AddCategoryIDs(ids...)
+	return pu
+}
+
+// AddCategory adds the "category" edges to the Category entity.
+func (pu *ProductUpdate) AddCategory(c ...*Category) *ProductUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return pu.AddCategoryIDs(ids...)
+}
+
 // Mutation returns the ProductMutation object of the builder.
 func (pu *ProductUpdate) Mutation() *ProductMutation {
 	return pu.mutation
+}
+
+// ClearCategory clears all "category" edges to the Category entity.
+func (pu *ProductUpdate) ClearCategory() *ProductUpdate {
+	pu.mutation.ClearCategory()
+	return pu
+}
+
+// RemoveCategoryIDs removes the "category" edge to Category entities by IDs.
+func (pu *ProductUpdate) RemoveCategoryIDs(ids ...int) *ProductUpdate {
+	pu.mutation.RemoveCategoryIDs(ids...)
+	return pu
+}
+
+// RemoveCategory removes "category" edges to Category entities.
+func (pu *ProductUpdate) RemoveCategory(c ...*Category) *ProductUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return pu.RemoveCategoryIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -267,6 +304,60 @@ func (pu *ProductUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: product.FieldStock,
 		})
 	}
+	if pu.mutation.CategoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   product.CategoryTable,
+			Columns: product.CategoryPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.RemovedCategoryIDs(); len(nodes) > 0 && !pu.mutation.CategoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   product.CategoryTable,
+			Columns: product.CategoryPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.CategoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   product.CategoryTable,
+			Columns: product.CategoryPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{product.Label}
@@ -371,9 +462,45 @@ func (puo *ProductUpdateOne) AddStock(i int) *ProductUpdateOne {
 	return puo
 }
 
+// AddCategoryIDs adds the "category" edge to the Category entity by IDs.
+func (puo *ProductUpdateOne) AddCategoryIDs(ids ...int) *ProductUpdateOne {
+	puo.mutation.AddCategoryIDs(ids...)
+	return puo
+}
+
+// AddCategory adds the "category" edges to the Category entity.
+func (puo *ProductUpdateOne) AddCategory(c ...*Category) *ProductUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return puo.AddCategoryIDs(ids...)
+}
+
 // Mutation returns the ProductMutation object of the builder.
 func (puo *ProductUpdateOne) Mutation() *ProductMutation {
 	return puo.mutation
+}
+
+// ClearCategory clears all "category" edges to the Category entity.
+func (puo *ProductUpdateOne) ClearCategory() *ProductUpdateOne {
+	puo.mutation.ClearCategory()
+	return puo
+}
+
+// RemoveCategoryIDs removes the "category" edge to Category entities by IDs.
+func (puo *ProductUpdateOne) RemoveCategoryIDs(ids ...int) *ProductUpdateOne {
+	puo.mutation.RemoveCategoryIDs(ids...)
+	return puo
+}
+
+// RemoveCategory removes "category" edges to Category entities.
+func (puo *ProductUpdateOne) RemoveCategory(c ...*Category) *ProductUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return puo.RemoveCategoryIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -548,6 +675,60 @@ func (puo *ProductUpdateOne) sqlSave(ctx context.Context) (_node *Product, err e
 			Value:  value,
 			Column: product.FieldStock,
 		})
+	}
+	if puo.mutation.CategoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   product.CategoryTable,
+			Columns: product.CategoryPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.RemovedCategoryIDs(); len(nodes) > 0 && !puo.mutation.CategoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   product.CategoryTable,
+			Columns: product.CategoryPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.CategoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   product.CategoryTable,
+			Columns: product.CategoryPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Product{config: puo.config}
 	_spec.Assign = _node.assignValues

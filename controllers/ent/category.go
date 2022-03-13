@@ -21,6 +21,27 @@ type Category struct {
 	Description string `json:"description,omitempty"`
 	// Thumbnail holds the value of the "thumbnail" field.
 	Thumbnail string `json:"thumbnail,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the CategoryQuery when eager-loading is set.
+	Edges CategoryEdges `json:"edges"`
+}
+
+// CategoryEdges holds the relations/edges for other nodes in the graph.
+type CategoryEdges struct {
+	// Products holds the value of the products edge.
+	Products []*Product `json:"products,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// ProductsOrErr returns the Products value or an error if the edge
+// was not loaded in eager-loading.
+func (e CategoryEdges) ProductsOrErr() ([]*Product, error) {
+	if e.loadedTypes[0] {
+		return e.Products, nil
+	}
+	return nil, &NotLoadedError{edge: "products"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -74,6 +95,11 @@ func (c *Category) assignValues(columns []string, values []interface{}) error {
 		}
 	}
 	return nil
+}
+
+// QueryProducts queries the "products" edge of the Category entity.
+func (c *Category) QueryProducts() *ProductQuery {
+	return (&CategoryClient{config: c.config}).QueryProducts(c)
 }
 
 // Update returns a builder for updating this Category.
