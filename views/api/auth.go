@@ -8,8 +8,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (api API) LoginUser(path string) {
-	api.Router.POST(path, func(ctx *gin.Context) {
+func (api API) AuthRouter() {
+	auth := api.Router.Group("/users")
+	auth.POST("/login", loginUser(&api))
+	auth.POST("/signup", signUpUser(&api))
+}
+
+func loginUser(api *API) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
 		userSchema := &ent.User{}
 		ctx.BindJSON(&userSchema)
 		if fetchedUser, err := api.Crud.GetUserByEmail(&userSchema.Email); err != nil {
@@ -22,11 +28,11 @@ func (api API) LoginUser(path string) {
 			ctx.IndentedJSON(http.StatusOK, fetchedUser)
 			return
 		}
-	})
+	}
 }
 
-func (api API) SignUpUser(path string) {
-	api.Router.POST(path, func(ctx *gin.Context) {
+func signUpUser(api *API) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
 		userSchema := &ent.User{}
 		ctx.BindJSON(&userSchema)
 		if createdUser, err := api.Crud.AddUser(userSchema); err != nil {
@@ -40,7 +46,7 @@ func (api API) SignUpUser(path string) {
 			ctx.IndentedJSON(http.StatusOK, createdUser)
 			return
 		}
-	})
+	}
 }
 
 // type credential struct {
