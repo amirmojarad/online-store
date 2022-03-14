@@ -3,11 +3,21 @@ package crud
 import (
 	"log"
 	"online-supermarket/controllers/ent"
+	"online-supermarket/models"
 )
 
-func (crud Crud) AddCustomer(u *ent.User, phone string) (*ent.Customer, error) {
+func (crud Crud) AddCustomer(user *models.User) (*ent.Customer, error) {
+	u, err := crud.GetUserByEmail(&user.Email)
+	if err != nil {
+		log.Println("on AddCustomer in controllers/db/crud/customer.go: ", err)
+		return nil, err
+	}
 	newCustomer, err := crud.Client.Customer.Create().
-		SetPhone(phone).SetUser(u).Save(crud.Ctx)
+		SetPhone(user.Phone).
+		SetBillingAddress(user.BillingAddress).
+		SetCountry(user.Country).
+		SetUser(u).
+		Save(crud.Ctx)
 	if err != nil {
 		log.Println("on AddCustomer in controllers/db/crud/customer.go: ", err)
 		return nil, err

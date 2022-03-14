@@ -21,6 +21,15 @@ func (crud Crud) AddUser(u *ent.User) (*ent.User, error) {
 	return newUser, nil
 }
 
+func (crud Crud) GetUserByID(id int) (*ent.User, error) {
+	if fetchedUser, err := crud.Client.User.Get(crud.Ctx, id); err != nil {
+		log.Println("on GetUserByEmail in controllers/crud/user.go: ", err)
+		return nil, err
+	} else {
+		return fetchedUser, nil
+	}
+}
+
 func (crud Crud) GetUserByEmail(email *string) (*ent.User, error) {
 	if fetchedUser, err := crud.Client.User.Query().Where(user.Email(*email)).First(crud.Ctx); err != nil {
 		log.Println("on GetUserByEmail in controllers/crud/user.go: ", err)
