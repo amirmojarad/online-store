@@ -81,21 +81,6 @@ func (cc *CustomerCreate) SetUser(u *User) *CustomerCreate {
 	return cc.SetUserID(u.ID)
 }
 
-// AddPurchasedProductIDs adds the "purchased_products" edge to the Product entity by IDs.
-func (cc *CustomerCreate) AddPurchasedProductIDs(ids ...int) *CustomerCreate {
-	cc.mutation.AddPurchasedProductIDs(ids...)
-	return cc
-}
-
-// AddPurchasedProducts adds the "purchased_products" edges to the Product entity.
-func (cc *CustomerCreate) AddPurchasedProducts(p ...*Product) *CustomerCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return cc.AddPurchasedProductIDs(ids...)
-}
-
 // AddCartProductIDs adds the "cart_products" edge to the Product entity by IDs.
 func (cc *CustomerCreate) AddCartProductIDs(ids ...int) *CustomerCreate {
 	cc.mutation.AddCartProductIDs(ids...)
@@ -279,25 +264,6 @@ func (cc *CustomerCreate) createSpec() (*Customer, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.user_customer = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := cc.mutation.PurchasedProductsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   customer.PurchasedProductsTable,
-			Columns: []string{customer.PurchasedProductsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: product.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := cc.mutation.CartProductsIDs(); len(nodes) > 0 {

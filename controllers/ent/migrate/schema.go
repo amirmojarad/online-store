@@ -79,7 +79,6 @@ var (
 		{Name: "thumbnail", Type: field.TypeString},
 		{Name: "create_date", Type: field.TypeTime},
 		{Name: "stock", Type: field.TypeInt, Default: 0},
-		{Name: "customer_purchased_products", Type: field.TypeInt, Nullable: true},
 		{Name: "customer_cart_products", Type: field.TypeInt, Nullable: true},
 		{Name: "order_products", Type: field.TypeInt, Nullable: true},
 	}
@@ -90,20 +89,14 @@ var (
 		PrimaryKey: []*schema.Column{ProductsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "products_customers_purchased_products",
+				Symbol:     "products_customers_cart_products",
 				Columns:    []*schema.Column{ProductsColumns[9]},
 				RefColumns: []*schema.Column{CustomersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
-				Symbol:     "products_customers_cart_products",
-				Columns:    []*schema.Column{ProductsColumns[10]},
-				RefColumns: []*schema.Column{CustomersColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
 				Symbol:     "products_orders_products",
-				Columns:    []*schema.Column{ProductsColumns[11]},
+				Columns:    []*schema.Column{ProductsColumns[10]},
 				RefColumns: []*schema.Column{OrdersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -163,8 +156,7 @@ func init() {
 	CustomersTable.ForeignKeys[0].RefTable = UsersTable
 	OrdersTable.ForeignKeys[0].RefTable = CustomersTable
 	ProductsTable.ForeignKeys[0].RefTable = CustomersTable
-	ProductsTable.ForeignKeys[1].RefTable = CustomersTable
-	ProductsTable.ForeignKeys[2].RefTable = OrdersTable
+	ProductsTable.ForeignKeys[1].RefTable = OrdersTable
 	CategoryProductsTable.ForeignKeys[0].RefTable = CategoriesTable
 	CategoryProductsTable.ForeignKeys[1].RefTable = ProductsTable
 }

@@ -54,7 +54,6 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "products"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"customer_purchased_products",
 	"customer_cart_products",
 	"order_products",
 }

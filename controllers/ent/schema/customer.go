@@ -25,7 +25,6 @@ func (Customer) Fields() []ent.Field {
 func (Customer) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("user", User.Type).Ref("customer").Unique().Required(),
-		edge.To("purchased_products", Product.Type),
 		edge.To("cart_products", Product.Type),
 		edge.To("orders", Order.Type),
 	}

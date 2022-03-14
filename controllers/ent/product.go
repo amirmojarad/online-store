@@ -34,10 +34,9 @@ type Product struct {
 	Stock int `json:"stock,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ProductQuery when eager-loading is set.
-	Edges                       ProductEdges `json:"edges"`
-	customer_purchased_products *int
-	customer_cart_products      *int
-	order_products              *int
+	Edges                  ProductEdges `json:"edges"`
+	customer_cart_products *int
+	order_products         *int
 }
 
 // ProductEdges holds the relations/edges for other nodes in the graph.
@@ -71,11 +70,9 @@ func (*Product) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullString)
 		case product.FieldCreateDate:
 			values[i] = new(sql.NullTime)
-		case product.ForeignKeys[0]: // customer_purchased_products
+		case product.ForeignKeys[0]: // customer_cart_products
 			values[i] = new(sql.NullInt64)
-		case product.ForeignKeys[1]: // customer_cart_products
-			values[i] = new(sql.NullInt64)
-		case product.ForeignKeys[2]: // order_products
+		case product.ForeignKeys[1]: // order_products
 			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Product", columns[i])
@@ -148,19 +145,12 @@ func (pr *Product) assignValues(columns []string, values []interface{}) error {
 			}
 		case product.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field customer_purchased_products", value)
-			} else if value.Valid {
-				pr.customer_purchased_products = new(int)
-				*pr.customer_purchased_products = int(value.Int64)
-			}
-		case product.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field customer_cart_products", value)
 			} else if value.Valid {
 				pr.customer_cart_products = new(int)
 				*pr.customer_cart_products = int(value.Int64)
 			}
-		case product.ForeignKeys[2]:
+		case product.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field order_products", value)
 			} else if value.Valid {

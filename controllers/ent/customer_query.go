@@ -29,11 +29,10 @@ type CustomerQuery struct {
 	fields     []string
 	predicates []predicate.Customer
 	// eager-loading edges.
-	withUser              *UserQuery
-	withPurchasedProducts *ProductQuery
-	withCartProducts      *ProductQuery
-	withOrders            *OrderQuery
-	withFKs               bool
+	withUser         *UserQuery
+	withCartProducts *ProductQuery
+	withOrders       *OrderQuery
+	withFKs          bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -85,28 +84,6 @@ func (cq *CustomerQuery) QueryUser() *UserQuery {
 			sqlgraph.From(customer.Table, customer.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, true, customer.UserTable, customer.UserColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryPurchasedProducts chains the current query on the "purchased_products" edge.
-func (cq *CustomerQuery) QueryPurchasedProducts() *ProductQuery {
-	query := &ProductQuery{config: cq.config}
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := cq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := cq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(customer.Table, customer.FieldID, selector),
-			sqlgraph.To(product.Table, product.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, customer.PurchasedProductsTable, customer.PurchasedProductsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
 		return fromU, nil
@@ -334,15 +311,14 @@ func (cq *CustomerQuery) Clone() *CustomerQuery {
 		return nil
 	}
 	return &CustomerQuery{
-		config:                cq.config,
-		limit:                 cq.limit,
-		offset:                cq.offset,
-		order:                 append([]OrderFunc{}, cq.order...),
-		predicates:            append([]predicate.Customer{}, cq.predicates...),
-		withUser:              cq.withUser.Clone(),
-		withPurchasedProducts: cq.withPurchasedProducts.Clone(),
-		withCartProducts:      cq.withCartProducts.Clone(),
-		withOrders:            cq.withOrders.Clone(),
+		config:           cq.config,
+		limit:            cq.limit,
+		offset:           cq.offset,
+		order:            append([]OrderFunc{}, cq.order...),
+		predicates:       append([]predicate.Customer{}, cq.predicates...),
+		withUser:         cq.withUser.Clone(),
+		withCartProducts: cq.withCartProducts.Clone(),
+		withOrders:       cq.withOrders.Clone(),
 		// clone intermediate query.
 		sql:    cq.sql.Clone(),
 		path:   cq.path,
@@ -358,17 +334,6 @@ func (cq *CustomerQuery) WithUser(opts ...func(*UserQuery)) *CustomerQuery {
 		opt(query)
 	}
 	cq.withUser = query
-	return cq
-}
-
-// WithPurchasedProducts tells the query-builder to eager-load the nodes that are connected to
-// the "purchased_products" edge. The optional arguments are used to configure the query builder of the edge.
-func (cq *CustomerQuery) WithPurchasedProducts(opts ...func(*ProductQuery)) *CustomerQuery {
-	query := &ProductQuery{config: cq.config}
-	for _, opt := range opts {
-		opt(query)
-	}
-	cq.withPurchasedProducts = query
 	return cq
 }
 
@@ -460,9 +425,8 @@ func (cq *CustomerQuery) sqlAll(ctx context.Context) ([]*Customer, error) {
 		nodes       = []*Customer{}
 		withFKs     = cq.withFKs
 		_spec       = cq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [3]bool{
 			cq.withUser != nil,
-			cq.withPurchasedProducts != nil,
 			cq.withCartProducts != nil,
 			cq.withOrders != nil,
 		}
@@ -519,35 +483,6 @@ func (cq *CustomerQuery) sqlAll(ctx context.Context) ([]*Customer, error) {
 			for i := range nodes {
 				nodes[i].Edges.User = n
 			}
-		}
-	}
-
-	if query := cq.withPurchasedProducts; query != nil {
-		fks := make([]driver.Value, 0, len(nodes))
-		nodeids := make(map[int]*Customer)
-		for i := range nodes {
-			fks = append(fks, nodes[i].ID)
-			nodeids[nodes[i].ID] = nodes[i]
-			nodes[i].Edges.PurchasedProducts = []*Product{}
-		}
-		query.withFKs = true
-		query.Where(predicate.Product(func(s *sql.Selector) {
-			s.Where(sql.InValues(customer.PurchasedProductsColumn, fks...))
-		}))
-		neighbors, err := query.All(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, n := range neighbors {
-			fk := n.customer_purchased_products
-			if fk == nil {
-				return nil, fmt.Errorf(`foreign-key "customer_purchased_products" is nil for node %v`, n.ID)
-			}
-			node, ok := nodeids[*fk]
-			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "customer_purchased_products" returned %v for node %v`, *fk, n.ID)
-			}
-			node.Edges.PurchasedProducts = append(node.Edges.PurchasedProducts, n)
 		}
 	}
 

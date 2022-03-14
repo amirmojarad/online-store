@@ -358,22 +358,6 @@ func (c *CustomerClient) QueryUser(cu *Customer) *UserQuery {
 	return query
 }
 
-// QueryPurchasedProducts queries the purchased_products edge of a Customer.
-func (c *CustomerClient) QueryPurchasedProducts(cu *Customer) *ProductQuery {
-	query := &ProductQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := cu.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(customer.Table, customer.FieldID, id),
-			sqlgraph.To(product.Table, product.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, customer.PurchasedProductsTable, customer.PurchasedProductsColumn),
-		)
-		fromV = sqlgraph.Neighbors(cu.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryCartProducts queries the cart_products edge of a Customer.
 func (c *CustomerClient) QueryCartProducts(cu *Customer) *ProductQuery {
 	query := &ProductQuery{config: c.config}

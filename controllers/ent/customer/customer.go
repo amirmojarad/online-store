@@ -17,8 +17,6 @@ const (
 	FieldPhone = "phone"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
-	// EdgePurchasedProducts holds the string denoting the purchased_products edge name in mutations.
-	EdgePurchasedProducts = "purchased_products"
 	// EdgeCartProducts holds the string denoting the cart_products edge name in mutations.
 	EdgeCartProducts = "cart_products"
 	// EdgeOrders holds the string denoting the orders edge name in mutations.
@@ -32,13 +30,6 @@ const (
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
 	UserColumn = "user_customer"
-	// PurchasedProductsTable is the table that holds the purchased_products relation/edge.
-	PurchasedProductsTable = "products"
-	// PurchasedProductsInverseTable is the table name for the Product entity.
-	// It exists in this package in order to avoid circular dependency with the "product" package.
-	PurchasedProductsInverseTable = "products"
-	// PurchasedProductsColumn is the table column denoting the purchased_products relation/edge.
-	PurchasedProductsColumn = "customer_purchased_products"
 	// CartProductsTable is the table that holds the cart_products relation/edge.
 	CartProductsTable = "products"
 	// CartProductsInverseTable is the table name for the Product entity.

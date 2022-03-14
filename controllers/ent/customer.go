@@ -34,15 +34,13 @@ type Customer struct {
 type CustomerEdges struct {
 	// User holds the value of the user edge.
 	User *User `json:"user,omitempty"`
-	// PurchasedProducts holds the value of the purchased_products edge.
-	PurchasedProducts []*Product `json:"purchased_products,omitempty"`
 	// CartProducts holds the value of the cart_products edge.
 	CartProducts []*Product `json:"cart_products,omitempty"`
 	// Orders holds the value of the orders edge.
 	Orders []*Order `json:"orders,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [3]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -59,19 +57,10 @@ func (e CustomerEdges) UserOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "user"}
 }
 
-// PurchasedProductsOrErr returns the PurchasedProducts value or an error if the edge
-// was not loaded in eager-loading.
-func (e CustomerEdges) PurchasedProductsOrErr() ([]*Product, error) {
-	if e.loadedTypes[1] {
-		return e.PurchasedProducts, nil
-	}
-	return nil, &NotLoadedError{edge: "purchased_products"}
-}
-
 // CartProductsOrErr returns the CartProducts value or an error if the edge
 // was not loaded in eager-loading.
 func (e CustomerEdges) CartProductsOrErr() ([]*Product, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		return e.CartProducts, nil
 	}
 	return nil, &NotLoadedError{edge: "cart_products"}
@@ -80,7 +69,7 @@ func (e CustomerEdges) CartProductsOrErr() ([]*Product, error) {
 // OrdersOrErr returns the Orders value or an error if the edge
 // was not loaded in eager-loading.
 func (e CustomerEdges) OrdersOrErr() ([]*Order, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		return e.Orders, nil
 	}
 	return nil, &NotLoadedError{edge: "orders"}
@@ -157,11 +146,6 @@ func (c *Customer) assignValues(columns []string, values []interface{}) error {
 // QueryUser queries the "user" edge of the Customer entity.
 func (c *Customer) QueryUser() *UserQuery {
 	return (&CustomerClient{config: c.config}).QueryUser(c)
-}
-
-// QueryPurchasedProducts queries the "purchased_products" edge of the Customer entity.
-func (c *Customer) QueryPurchasedProducts() *ProductQuery {
-	return (&CustomerClient{config: c.config}).QueryPurchasedProducts(c)
 }
 
 // QueryCartProducts queries the "cart_products" edge of the Customer entity.

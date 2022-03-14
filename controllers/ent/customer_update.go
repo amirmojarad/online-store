@@ -107,21 +107,6 @@ func (cu *CustomerUpdate) SetUser(u *User) *CustomerUpdate {
 	return cu.SetUserID(u.ID)
 }
 
-// AddPurchasedProductIDs adds the "purchased_products" edge to the Product entity by IDs.
-func (cu *CustomerUpdate) AddPurchasedProductIDs(ids ...int) *CustomerUpdate {
-	cu.mutation.AddPurchasedProductIDs(ids...)
-	return cu
-}
-
-// AddPurchasedProducts adds the "purchased_products" edges to the Product entity.
-func (cu *CustomerUpdate) AddPurchasedProducts(p ...*Product) *CustomerUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return cu.AddPurchasedProductIDs(ids...)
-}
-
 // AddCartProductIDs adds the "cart_products" edge to the Product entity by IDs.
 func (cu *CustomerUpdate) AddCartProductIDs(ids ...int) *CustomerUpdate {
 	cu.mutation.AddCartProductIDs(ids...)
@@ -161,27 +146,6 @@ func (cu *CustomerUpdate) Mutation() *CustomerMutation {
 func (cu *CustomerUpdate) ClearUser() *CustomerUpdate {
 	cu.mutation.ClearUser()
 	return cu
-}
-
-// ClearPurchasedProducts clears all "purchased_products" edges to the Product entity.
-func (cu *CustomerUpdate) ClearPurchasedProducts() *CustomerUpdate {
-	cu.mutation.ClearPurchasedProducts()
-	return cu
-}
-
-// RemovePurchasedProductIDs removes the "purchased_products" edge to Product entities by IDs.
-func (cu *CustomerUpdate) RemovePurchasedProductIDs(ids ...int) *CustomerUpdate {
-	cu.mutation.RemovePurchasedProductIDs(ids...)
-	return cu
-}
-
-// RemovePurchasedProducts removes "purchased_products" edges to Product entities.
-func (cu *CustomerUpdate) RemovePurchasedProducts(p ...*Product) *CustomerUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return cu.RemovePurchasedProductIDs(ids...)
 }
 
 // ClearCartProducts clears all "cart_products" edges to the Product entity.
@@ -385,60 +349,6 @@ func (cu *CustomerUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: user.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if cu.mutation.PurchasedProductsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   customer.PurchasedProductsTable,
-			Columns: []string{customer.PurchasedProductsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: product.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := cu.mutation.RemovedPurchasedProductsIDs(); len(nodes) > 0 && !cu.mutation.PurchasedProductsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   customer.PurchasedProductsTable,
-			Columns: []string{customer.PurchasedProductsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: product.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := cu.mutation.PurchasedProductsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   customer.PurchasedProductsTable,
-			Columns: []string{customer.PurchasedProductsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: product.FieldID,
 				},
 			},
 		}
@@ -651,21 +561,6 @@ func (cuo *CustomerUpdateOne) SetUser(u *User) *CustomerUpdateOne {
 	return cuo.SetUserID(u.ID)
 }
 
-// AddPurchasedProductIDs adds the "purchased_products" edge to the Product entity by IDs.
-func (cuo *CustomerUpdateOne) AddPurchasedProductIDs(ids ...int) *CustomerUpdateOne {
-	cuo.mutation.AddPurchasedProductIDs(ids...)
-	return cuo
-}
-
-// AddPurchasedProducts adds the "purchased_products" edges to the Product entity.
-func (cuo *CustomerUpdateOne) AddPurchasedProducts(p ...*Product) *CustomerUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return cuo.AddPurchasedProductIDs(ids...)
-}
-
 // AddCartProductIDs adds the "cart_products" edge to the Product entity by IDs.
 func (cuo *CustomerUpdateOne) AddCartProductIDs(ids ...int) *CustomerUpdateOne {
 	cuo.mutation.AddCartProductIDs(ids...)
@@ -705,27 +600,6 @@ func (cuo *CustomerUpdateOne) Mutation() *CustomerMutation {
 func (cuo *CustomerUpdateOne) ClearUser() *CustomerUpdateOne {
 	cuo.mutation.ClearUser()
 	return cuo
-}
-
-// ClearPurchasedProducts clears all "purchased_products" edges to the Product entity.
-func (cuo *CustomerUpdateOne) ClearPurchasedProducts() *CustomerUpdateOne {
-	cuo.mutation.ClearPurchasedProducts()
-	return cuo
-}
-
-// RemovePurchasedProductIDs removes the "purchased_products" edge to Product entities by IDs.
-func (cuo *CustomerUpdateOne) RemovePurchasedProductIDs(ids ...int) *CustomerUpdateOne {
-	cuo.mutation.RemovePurchasedProductIDs(ids...)
-	return cuo
-}
-
-// RemovePurchasedProducts removes "purchased_products" edges to Product entities.
-func (cuo *CustomerUpdateOne) RemovePurchasedProducts(p ...*Product) *CustomerUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return cuo.RemovePurchasedProductIDs(ids...)
 }
 
 // ClearCartProducts clears all "cart_products" edges to the Product entity.
@@ -953,60 +827,6 @@ func (cuo *CustomerUpdateOne) sqlSave(ctx context.Context) (_node *Customer, err
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: user.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if cuo.mutation.PurchasedProductsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   customer.PurchasedProductsTable,
-			Columns: []string{customer.PurchasedProductsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: product.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := cuo.mutation.RemovedPurchasedProductsIDs(); len(nodes) > 0 && !cuo.mutation.PurchasedProductsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   customer.PurchasedProductsTable,
-			Columns: []string{customer.PurchasedProductsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: product.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := cuo.mutation.PurchasedProductsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   customer.PurchasedProductsTable,
-			Columns: []string{customer.PurchasedProductsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: product.FieldID,
 				},
 			},
 		}

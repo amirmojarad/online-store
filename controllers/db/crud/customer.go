@@ -43,16 +43,16 @@ func (crud Crud) GetOrdersOfUser(id int) ([]*ent.Order, error) {
 	}
 }
 
-func (crud Crud) GetPurchasedProducts(id int) ([]*ent.Product, error) {
-	if fetchedCustomer, err := crud.GetCustomer(id); err != nil {
-		log.Println("on GetPurchasedProducts() in controllers/db/crud/order.go: ", err)
+func (crud Crud) AddProductsToCart(ids *[]int, customerID int) ([]*ent.Product, error) {
+	cust, err := crud.GetCustomer(customerID)
+	if err != nil {
+		log.Println("on AddProductsToCart() in controllers/db/crud/order.go: ", err)
 		return nil, err
-	} else {
-		if products, err := fetchedCustomer.QueryPurchasedProducts().All(crud.Ctx); err != nil {
-			log.Println("on GetPurchasedProducts() in controllers/db/crud/order.go: ", err)
-			return nil, err
-		} else {
-			return products, err
-		}
 	}
+	cust, err = cust.Update().AddCartProductIDs(*ids...).Save(crud.Ctx)
+	if err != nil {
+		log.Println("on AddProductsToCart() in controllers/db/crud/order.go: ", err)
+		return nil, err
+	}
+	return cust.QueryCartProducts().AllX(crud.Ctx), nil
 }

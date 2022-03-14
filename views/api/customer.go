@@ -12,9 +12,8 @@ import (
 func (api API) CustomerRouter() {
 	category := api.Router.Group("/users")
 	category.POST("/", api.postCustomer())
-	category.POST("/:id/purchase", postPurchaseToCustomer())
 	category.POST("/:id/orders", postOrderToCustomer())
-	category.POST("/:id/cart", postCartItemToCustomer())
+	category.POST("/:id/cart", api.postCartItemToCustomer())
 	category.GET("/:id/products/all", api.getAllProducts())
 	category.GET("/:id", api.getCustomer())
 }
@@ -68,14 +67,22 @@ func postOrderToCustomer() gin.HandlerFunc {
 	}
 }
 
-func postPurchaseToCustomer() gin.HandlerFunc {
+func (api API) postCartItemToCustomer() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-
-	}
-}
-
-func postCartItemToCustomer() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-
+		customerID, _ := strconv.Atoi(ctx.Param("id"))
+		productsIDs := &[]int{}
+		if err := ctx.BindJSON(&productsIDs); err != nil {
+			ctx.IndentedJSON(http.StatusUnprocessableEntity, gin.H{
+				"message": "UnprocessableEntity",
+			})
+			return
+		}
+		if products, err := api.Crud.AddProductsToCart(productsIDs, customerID); err != nil {
+			log.Println("on postCartItemToCustomer() in view/api/customer.go: ", err)
+			ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
+			return
+		} else {
+			ctx.IndentedJSON(http.StatusCreated, products)
+		}
 	}
 }

@@ -549,28 +549,25 @@ func (m *CategoryMutation) ResetEdge(name string) error {
 // CustomerMutation represents an operation that mutates the Customer nodes in the graph.
 type CustomerMutation struct {
 	config
-	op                        Op
-	typ                       string
-	id                        *int
-	full_name                 *string
-	billing_address           *string
-	country                   *string
-	phone                     *string
-	clearedFields             map[string]struct{}
-	user                      *int
-	cleareduser               bool
-	purchased_products        map[int]struct{}
-	removedpurchased_products map[int]struct{}
-	clearedpurchased_products bool
-	cart_products             map[int]struct{}
-	removedcart_products      map[int]struct{}
-	clearedcart_products      bool
-	orders                    map[int]struct{}
-	removedorders             map[int]struct{}
-	clearedorders             bool
-	done                      bool
-	oldValue                  func(context.Context) (*Customer, error)
-	predicates                []predicate.Customer
+	op                   Op
+	typ                  string
+	id                   *int
+	full_name            *string
+	billing_address      *string
+	country              *string
+	phone                *string
+	clearedFields        map[string]struct{}
+	user                 *int
+	cleareduser          bool
+	cart_products        map[int]struct{}
+	removedcart_products map[int]struct{}
+	clearedcart_products bool
+	orders               map[int]struct{}
+	removedorders        map[int]struct{}
+	clearedorders        bool
+	done                 bool
+	oldValue             func(context.Context) (*Customer, error)
+	predicates           []predicate.Customer
 }
 
 var _ ent.Mutation = (*CustomerMutation)(nil)
@@ -893,60 +890,6 @@ func (m *CustomerMutation) ResetUser() {
 	m.cleareduser = false
 }
 
-// AddPurchasedProductIDs adds the "purchased_products" edge to the Product entity by ids.
-func (m *CustomerMutation) AddPurchasedProductIDs(ids ...int) {
-	if m.purchased_products == nil {
-		m.purchased_products = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.purchased_products[ids[i]] = struct{}{}
-	}
-}
-
-// ClearPurchasedProducts clears the "purchased_products" edge to the Product entity.
-func (m *CustomerMutation) ClearPurchasedProducts() {
-	m.clearedpurchased_products = true
-}
-
-// PurchasedProductsCleared reports if the "purchased_products" edge to the Product entity was cleared.
-func (m *CustomerMutation) PurchasedProductsCleared() bool {
-	return m.clearedpurchased_products
-}
-
-// RemovePurchasedProductIDs removes the "purchased_products" edge to the Product entity by IDs.
-func (m *CustomerMutation) RemovePurchasedProductIDs(ids ...int) {
-	if m.removedpurchased_products == nil {
-		m.removedpurchased_products = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.purchased_products, ids[i])
-		m.removedpurchased_products[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedPurchasedProducts returns the removed IDs of the "purchased_products" edge to the Product entity.
-func (m *CustomerMutation) RemovedPurchasedProductsIDs() (ids []int) {
-	for id := range m.removedpurchased_products {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// PurchasedProductsIDs returns the "purchased_products" edge IDs in the mutation.
-func (m *CustomerMutation) PurchasedProductsIDs() (ids []int) {
-	for id := range m.purchased_products {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetPurchasedProducts resets all changes to the "purchased_products" edge.
-func (m *CustomerMutation) ResetPurchasedProducts() {
-	m.purchased_products = nil
-	m.clearedpurchased_products = false
-	m.removedpurchased_products = nil
-}
-
 // AddCartProductIDs adds the "cart_products" edge to the Product entity by ids.
 func (m *CustomerMutation) AddCartProductIDs(ids ...int) {
 	if m.cart_products == nil {
@@ -1245,12 +1188,9 @@ func (m *CustomerMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *CustomerMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 3)
 	if m.user != nil {
 		edges = append(edges, customer.EdgeUser)
-	}
-	if m.purchased_products != nil {
-		edges = append(edges, customer.EdgePurchasedProducts)
 	}
 	if m.cart_products != nil {
 		edges = append(edges, customer.EdgeCartProducts)
@@ -1269,12 +1209,6 @@ func (m *CustomerMutation) AddedIDs(name string) []ent.Value {
 		if id := m.user; id != nil {
 			return []ent.Value{*id}
 		}
-	case customer.EdgePurchasedProducts:
-		ids := make([]ent.Value, 0, len(m.purchased_products))
-		for id := range m.purchased_products {
-			ids = append(ids, id)
-		}
-		return ids
 	case customer.EdgeCartProducts:
 		ids := make([]ent.Value, 0, len(m.cart_products))
 		for id := range m.cart_products {
@@ -1293,10 +1227,7 @@ func (m *CustomerMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *CustomerMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
-	if m.removedpurchased_products != nil {
-		edges = append(edges, customer.EdgePurchasedProducts)
-	}
+	edges := make([]string, 0, 3)
 	if m.removedcart_products != nil {
 		edges = append(edges, customer.EdgeCartProducts)
 	}
@@ -1310,12 +1241,6 @@ func (m *CustomerMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *CustomerMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case customer.EdgePurchasedProducts:
-		ids := make([]ent.Value, 0, len(m.removedpurchased_products))
-		for id := range m.removedpurchased_products {
-			ids = append(ids, id)
-		}
-		return ids
 	case customer.EdgeCartProducts:
 		ids := make([]ent.Value, 0, len(m.removedcart_products))
 		for id := range m.removedcart_products {
@@ -1334,12 +1259,9 @@ func (m *CustomerMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *CustomerMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 3)
 	if m.cleareduser {
 		edges = append(edges, customer.EdgeUser)
-	}
-	if m.clearedpurchased_products {
-		edges = append(edges, customer.EdgePurchasedProducts)
 	}
 	if m.clearedcart_products {
 		edges = append(edges, customer.EdgeCartProducts)
@@ -1356,8 +1278,6 @@ func (m *CustomerMutation) EdgeCleared(name string) bool {
 	switch name {
 	case customer.EdgeUser:
 		return m.cleareduser
-	case customer.EdgePurchasedProducts:
-		return m.clearedpurchased_products
 	case customer.EdgeCartProducts:
 		return m.clearedcart_products
 	case customer.EdgeOrders:
@@ -1383,9 +1303,6 @@ func (m *CustomerMutation) ResetEdge(name string) error {
 	switch name {
 	case customer.EdgeUser:
 		m.ResetUser()
-		return nil
-	case customer.EdgePurchasedProducts:
-		m.ResetPurchasedProducts()
 		return nil
 	case customer.EdgeCartProducts:
 		m.ResetCartProducts()
