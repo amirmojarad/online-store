@@ -24,6 +24,8 @@ const (
 	FieldStatus = "status"
 	// EdgeProducts holds the string denoting the products edge name in mutations.
 	EdgeProducts = "products"
+	// EdgeCustomer holds the string denoting the customer edge name in mutations.
+	EdgeCustomer = "customer"
 	// Table holds the table name of the order in the database.
 	Table = "orders"
 	// ProductsTable is the table that holds the products relation/edge.
@@ -33,6 +35,13 @@ const (
 	ProductsInverseTable = "products"
 	// ProductsColumn is the table column denoting the products relation/edge.
 	ProductsColumn = "order_products"
+	// CustomerTable is the table that holds the customer relation/edge.
+	CustomerTable = "orders"
+	// CustomerInverseTable is the table name for the Customer entity.
+	// It exists in this package in order to avoid circular dependency with the "customer" package.
+	CustomerInverseTable = "customers"
+	// CustomerColumn is the table column denoting the customer relation/edge.
+	CustomerColumn = "customer_orders"
 )
 
 // Columns holds all SQL columns for order fields.

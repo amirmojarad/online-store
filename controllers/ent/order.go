@@ -4,6 +4,7 @@ package ent
 
 import (
 	"fmt"
+	"online-supermarket/controllers/ent/customer"
 	"online-supermarket/controllers/ent/order"
 	"strings"
 	"time"
@@ -36,9 +37,11 @@ type Order struct {
 type OrderEdges struct {
 	// Products holds the value of the products edge.
 	Products []*Product `json:"products,omitempty"`
+	// Customer holds the value of the customer edge.
+	Customer *Customer `json:"customer,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // ProductsOrErr returns the Products value or an error if the edge
@@ -48,6 +51,20 @@ func (e OrderEdges) ProductsOrErr() ([]*Product, error) {
 		return e.Products, nil
 	}
 	return nil, &NotLoadedError{edge: "products"}
+}
+
+// CustomerOrErr returns the Customer value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e OrderEdges) CustomerOrErr() (*Customer, error) {
+	if e.loadedTypes[1] {
+		if e.Customer == nil {
+			// The edge customer was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: customer.Label}
+		}
+		return e.Customer, nil
+	}
+	return nil, &NotLoadedError{edge: "customer"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -131,6 +148,11 @@ func (o *Order) assignValues(columns []string, values []interface{}) error {
 // QueryProducts queries the "products" edge of the Order entity.
 func (o *Order) QueryProducts() *ProductQuery {
 	return (&OrderClient{config: o.config}).QueryProducts(o)
+}
+
+// QueryCustomer queries the "customer" edge of the Order entity.
+func (o *Order) QueryCustomer() *CustomerQuery {
+	return (&OrderClient{config: o.config}).QueryCustomer(o)
 }
 
 // Update returns a builder for updating this Order.

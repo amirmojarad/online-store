@@ -1330,6 +1330,8 @@ type OrderMutation struct {
 	products         map[int]struct{}
 	removedproducts  map[int]struct{}
 	clearedproducts  bool
+	customer         *int
+	clearedcustomer  bool
 	done             bool
 	oldValue         func(context.Context) (*Order, error)
 	predicates       []predicate.Order
@@ -1687,6 +1689,45 @@ func (m *OrderMutation) ResetProducts() {
 	m.removedproducts = nil
 }
 
+// SetCustomerID sets the "customer" edge to the Customer entity by id.
+func (m *OrderMutation) SetCustomerID(id int) {
+	m.customer = &id
+}
+
+// ClearCustomer clears the "customer" edge to the Customer entity.
+func (m *OrderMutation) ClearCustomer() {
+	m.clearedcustomer = true
+}
+
+// CustomerCleared reports if the "customer" edge to the Customer entity was cleared.
+func (m *OrderMutation) CustomerCleared() bool {
+	return m.clearedcustomer
+}
+
+// CustomerID returns the "customer" edge ID in the mutation.
+func (m *OrderMutation) CustomerID() (id int, exists bool) {
+	if m.customer != nil {
+		return *m.customer, true
+	}
+	return
+}
+
+// CustomerIDs returns the "customer" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CustomerID instead. It exists only for internal usage by the builders.
+func (m *OrderMutation) CustomerIDs() (ids []int) {
+	if id := m.customer; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCustomer resets all changes to the "customer" edge.
+func (m *OrderMutation) ResetCustomer() {
+	m.customer = nil
+	m.clearedcustomer = false
+}
+
 // Where appends a list predicates to the OrderMutation builder.
 func (m *OrderMutation) Where(ps ...predicate.Order) {
 	m.predicates = append(m.predicates, ps...)
@@ -1888,9 +1929,12 @@ func (m *OrderMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *OrderMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.products != nil {
 		edges = append(edges, order.EdgeProducts)
+	}
+	if m.customer != nil {
+		edges = append(edges, order.EdgeCustomer)
 	}
 	return edges
 }
@@ -1905,13 +1949,17 @@ func (m *OrderMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case order.EdgeCustomer:
+		if id := m.customer; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *OrderMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedproducts != nil {
 		edges = append(edges, order.EdgeProducts)
 	}
@@ -1934,9 +1982,12 @@ func (m *OrderMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *OrderMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedproducts {
 		edges = append(edges, order.EdgeProducts)
+	}
+	if m.clearedcustomer {
+		edges = append(edges, order.EdgeCustomer)
 	}
 	return edges
 }
@@ -1947,6 +1998,8 @@ func (m *OrderMutation) EdgeCleared(name string) bool {
 	switch name {
 	case order.EdgeProducts:
 		return m.clearedproducts
+	case order.EdgeCustomer:
+		return m.clearedcustomer
 	}
 	return false
 }
@@ -1955,6 +2008,9 @@ func (m *OrderMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *OrderMutation) ClearEdge(name string) error {
 	switch name {
+	case order.EdgeCustomer:
+		m.ClearCustomer()
+		return nil
 	}
 	return fmt.Errorf("unknown Order unique edge %s", name)
 }
@@ -1965,6 +2021,9 @@ func (m *OrderMutation) ResetEdge(name string) error {
 	switch name {
 	case order.EdgeProducts:
 		m.ResetProducts()
+		return nil
+	case order.EdgeCustomer:
+		m.ResetCustomer()
 		return nil
 	}
 	return fmt.Errorf("unknown Order edge %s", name)

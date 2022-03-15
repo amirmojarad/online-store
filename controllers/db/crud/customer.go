@@ -56,3 +56,22 @@ func (crud Crud) AddProductsToCart(ids *[]int, customerID int) ([]*ent.Product, 
 	}
 	return cust.QueryCartProducts().AllX(crud.Ctx), nil
 }
+
+func (crud Crud) GetAllProducts(customerID int) ([]*ent.Product, error) {
+	if cust, err := crud.GetCustomer(customerID); err != nil {
+		log.Println("on GetAllProducts() in controllers/db/crud/order.go: ", err)
+		return nil, err
+	} else {
+		return cust.QueryCartProducts().All(crud.Ctx)
+	}
+}
+
+func (crud Crud) DeleteItems(cartItems *[]int, customerID int) error {
+	if cust, err := crud.GetCustomer(customerID); err != nil {
+		log.Println("on DeleteItems() in controllers/db/crud/order.go: ", err)
+		return err
+	} else {
+		cust.Update().RemoveCartProductIDs(*cartItems...).Exec(crud.Ctx)
+		return nil
+	}
+}

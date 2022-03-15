@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"online-supermarket/controllers/ent/customer"
 	"online-supermarket/controllers/ent/order"
 	"online-supermarket/controllers/ent/predicate"
 	"online-supermarket/controllers/ent/product"
@@ -28,6 +29,7 @@ type OrderQuery struct {
 	predicates []predicate.Order
 	// eager-loading edges.
 	withProducts *ProductQuery
+	withCustomer *CustomerQuery
 	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -80,6 +82,28 @@ func (oq *OrderQuery) QueryProducts() *ProductQuery {
 			sqlgraph.From(order.Table, order.FieldID, selector),
 			sqlgraph.To(product.Table, product.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, order.ProductsTable, order.ProductsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCustomer chains the current query on the "customer" edge.
+func (oq *OrderQuery) QueryCustomer() *CustomerQuery {
+	query := &CustomerQuery{config: oq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := oq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := oq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(order.Table, order.FieldID, selector),
+			sqlgraph.To(customer.Table, customer.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, order.CustomerTable, order.CustomerColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
 		return fromU, nil
@@ -269,6 +293,7 @@ func (oq *OrderQuery) Clone() *OrderQuery {
 		order:        append([]OrderFunc{}, oq.order...),
 		predicates:   append([]predicate.Order{}, oq.predicates...),
 		withProducts: oq.withProducts.Clone(),
+		withCustomer: oq.withCustomer.Clone(),
 		// clone intermediate query.
 		sql:    oq.sql.Clone(),
 		path:   oq.path,
@@ -284,6 +309,17 @@ func (oq *OrderQuery) WithProducts(opts ...func(*ProductQuery)) *OrderQuery {
 		opt(query)
 	}
 	oq.withProducts = query
+	return oq
+}
+
+// WithCustomer tells the query-builder to eager-load the nodes that are connected to
+// the "customer" edge. The optional arguments are used to configure the query builder of the edge.
+func (oq *OrderQuery) WithCustomer(opts ...func(*CustomerQuery)) *OrderQuery {
+	query := &CustomerQuery{config: oq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	oq.withCustomer = query
 	return oq
 }
 
@@ -353,10 +389,14 @@ func (oq *OrderQuery) sqlAll(ctx context.Context) ([]*Order, error) {
 		nodes       = []*Order{}
 		withFKs     = oq.withFKs
 		_spec       = oq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			oq.withProducts != nil,
+			oq.withCustomer != nil,
 		}
 	)
+	if oq.withCustomer != nil {
+		withFKs = true
+	}
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, order.ForeignKeys...)
 	}
@@ -406,6 +446,35 @@ func (oq *OrderQuery) sqlAll(ctx context.Context) ([]*Order, error) {
 				return nil, fmt.Errorf(`unexpected foreign-key "order_products" returned %v for node %v`, *fk, n.ID)
 			}
 			node.Edges.Products = append(node.Edges.Products, n)
+		}
+	}
+
+	if query := oq.withCustomer; query != nil {
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Order)
+		for i := range nodes {
+			if nodes[i].customer_orders == nil {
+				continue
+			}
+			fk := *nodes[i].customer_orders
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
+		}
+		query.Where(customer.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "customer_orders" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Customer = n
+			}
 		}
 	}
 

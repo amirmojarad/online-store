@@ -28,5 +28,6 @@ func (Order) Fields() []ent.Field {
 func (Order) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("products", Product.Type),
+		edge.From("customer", Customer.Type).Ref("orders").Unique(),
 	}
 }

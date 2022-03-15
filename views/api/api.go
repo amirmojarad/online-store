@@ -4,6 +4,7 @@ import (
 	"context"
 	"online-supermarket/controllers/db/crud"
 	"online-supermarket/controllers/ent"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,6 +12,10 @@ import (
 type API struct {
 	Router *gin.Engine
 	Crud   *crud.Crud
+}
+
+func (api API) GetIdParameter(ctx *gin.Context) (int, error) {
+	return strconv.Atoi(ctx.Param("id"))
 }
 
 func RunAPI(ctx context.Context, client *ent.Client) {

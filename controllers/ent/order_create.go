@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"online-supermarket/controllers/ent/customer"
 	"online-supermarket/controllers/ent/order"
 	"online-supermarket/controllers/ent/product"
 	"time"
@@ -72,6 +73,25 @@ func (oc *OrderCreate) AddProducts(p ...*Product) *OrderCreate {
 		ids[i] = p[i].ID
 	}
 	return oc.AddProductIDs(ids...)
+}
+
+// SetCustomerID sets the "customer" edge to the Customer entity by ID.
+func (oc *OrderCreate) SetCustomerID(id int) *OrderCreate {
+	oc.mutation.SetCustomerID(id)
+	return oc
+}
+
+// SetNillableCustomerID sets the "customer" edge to the Customer entity by ID if the given value is not nil.
+func (oc *OrderCreate) SetNillableCustomerID(id *int) *OrderCreate {
+	if id != nil {
+		oc = oc.SetCustomerID(*id)
+	}
+	return oc
+}
+
+// SetCustomer sets the "customer" edge to the Customer entity.
+func (oc *OrderCreate) SetCustomer(c *Customer) *OrderCreate {
+	return oc.SetCustomerID(c.ID)
 }
 
 // Mutation returns the OrderMutation object of the builder.
@@ -262,6 +282,26 @@ func (oc *OrderCreate) createSpec() (*Order, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := oc.mutation.CustomerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   order.CustomerTable,
+			Columns: []string{order.CustomerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: customer.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.customer_orders = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

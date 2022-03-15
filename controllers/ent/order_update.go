@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"online-supermarket/controllers/ent/customer"
 	"online-supermarket/controllers/ent/order"
 	"online-supermarket/controllers/ent/predicate"
 	"online-supermarket/controllers/ent/product"
@@ -89,6 +90,25 @@ func (ou *OrderUpdate) AddProducts(p ...*Product) *OrderUpdate {
 	return ou.AddProductIDs(ids...)
 }
 
+// SetCustomerID sets the "customer" edge to the Customer entity by ID.
+func (ou *OrderUpdate) SetCustomerID(id int) *OrderUpdate {
+	ou.mutation.SetCustomerID(id)
+	return ou
+}
+
+// SetNillableCustomerID sets the "customer" edge to the Customer entity by ID if the given value is not nil.
+func (ou *OrderUpdate) SetNillableCustomerID(id *int) *OrderUpdate {
+	if id != nil {
+		ou = ou.SetCustomerID(*id)
+	}
+	return ou
+}
+
+// SetCustomer sets the "customer" edge to the Customer entity.
+func (ou *OrderUpdate) SetCustomer(c *Customer) *OrderUpdate {
+	return ou.SetCustomerID(c.ID)
+}
+
 // Mutation returns the OrderMutation object of the builder.
 func (ou *OrderUpdate) Mutation() *OrderMutation {
 	return ou.mutation
@@ -113,6 +133,12 @@ func (ou *OrderUpdate) RemoveProducts(p ...*Product) *OrderUpdate {
 		ids[i] = p[i].ID
 	}
 	return ou.RemoveProductIDs(ids...)
+}
+
+// ClearCustomer clears the "customer" edge to the Customer entity.
+func (ou *OrderUpdate) ClearCustomer() *OrderUpdate {
+	ou.mutation.ClearCustomer()
+	return ou
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -304,6 +330,41 @@ func (ou *OrderUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if ou.mutation.CustomerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   order.CustomerTable,
+			Columns: []string{order.CustomerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: customer.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ou.mutation.CustomerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   order.CustomerTable,
+			Columns: []string{order.CustomerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: customer.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ou.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{order.Label}
@@ -383,6 +444,25 @@ func (ouo *OrderUpdateOne) AddProducts(p ...*Product) *OrderUpdateOne {
 	return ouo.AddProductIDs(ids...)
 }
 
+// SetCustomerID sets the "customer" edge to the Customer entity by ID.
+func (ouo *OrderUpdateOne) SetCustomerID(id int) *OrderUpdateOne {
+	ouo.mutation.SetCustomerID(id)
+	return ouo
+}
+
+// SetNillableCustomerID sets the "customer" edge to the Customer entity by ID if the given value is not nil.
+func (ouo *OrderUpdateOne) SetNillableCustomerID(id *int) *OrderUpdateOne {
+	if id != nil {
+		ouo = ouo.SetCustomerID(*id)
+	}
+	return ouo
+}
+
+// SetCustomer sets the "customer" edge to the Customer entity.
+func (ouo *OrderUpdateOne) SetCustomer(c *Customer) *OrderUpdateOne {
+	return ouo.SetCustomerID(c.ID)
+}
+
 // Mutation returns the OrderMutation object of the builder.
 func (ouo *OrderUpdateOne) Mutation() *OrderMutation {
 	return ouo.mutation
@@ -407,6 +487,12 @@ func (ouo *OrderUpdateOne) RemoveProducts(p ...*Product) *OrderUpdateOne {
 		ids[i] = p[i].ID
 	}
 	return ouo.RemoveProductIDs(ids...)
+}
+
+// ClearCustomer clears the "customer" edge to the Customer entity.
+func (ouo *OrderUpdateOne) ClearCustomer() *OrderUpdateOne {
+	ouo.mutation.ClearCustomer()
+	return ouo
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -614,6 +700,41 @@ func (ouo *OrderUpdateOne) sqlSave(ctx context.Context) (_node *Order, err error
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: product.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ouo.mutation.CustomerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   order.CustomerTable,
+			Columns: []string{order.CustomerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: customer.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ouo.mutation.CustomerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   order.CustomerTable,
+			Columns: []string{order.CustomerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: customer.FieldID,
 				},
 			},
 		}
