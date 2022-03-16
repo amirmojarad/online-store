@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"online-supermarket/controllers/ent"
+	"online-supermarket/controllers/ent/order"
 	"online-supermarket/models"
 	"strconv"
 
@@ -22,11 +23,41 @@ func (api API) CustomerRouter() {
 	category.GET("/:id/cart", api.getCartItems())
 	category.DELETE("/:id/cart", api.deleteCartItems())
 	// Orders Endpoint
-	category.POST("/:id/orders", api.postOrderToCustomer())
+	customerOrdersPath := "/:id/orders"
+	category.POST(customerOrdersPath, api.postOrderToCustomer())
+	category.GET(customerOrdersPath, api.getCustomerOrders())
+	category.DELETE(customerOrdersPath, api.deleteCustomerOrders())
+	category.PATCH(customerOrdersPath+"/:orderID", api.patchCustomerOrder())
 
 	// Get All Products
 	category.GET("/:id/products/all", api.getAllProducts())
+}
 
+type OrderAndProducts struct {
+	Order    *ent.Order
+	Products []*ent.Product
+}
+
+func (api API) getCustomerOrders() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id, _ := api.GetIdParameter(ctx, "id")
+		if orders, err := api.Crud.GetOrdersOfCustomer(id); err != nil {
+			log.Println("on getCustomerOrders() in view/api/customer.go: ", err)
+			ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
+		} else {
+			result := make([]OrderAndProducts, len(orders))
+			for i, item := range orders {
+				result[i] = OrderAndProducts{Order: item, Products: item.QueryProducts().AllX(ctx)}
+			}
+			ctx.IndentedJSON(http.StatusOK, result)
+		}
+	}
+}
+
+func (api API) deleteCartItems() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+	}
 }
 
 func (api API) getCustomer() gin.HandlerFunc {
@@ -79,7 +110,7 @@ type OrderModel struct {
 
 func (api API) postOrderToCustomer() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		id, _ := api.GetIdParameter(ctx)
+		id, _ := api.GetIdParameter(ctx, "id")
 		om := OrderModel{}
 		log.Println("OM", om)
 		ctx.BindJSON(&om)
@@ -130,9 +161,23 @@ func (api API) getCartItems() gin.HandlerFunc {
 	}
 }
 
-func (api API) deleteCartItems() gin.HandlerFunc {
+func (api API) patchCustomerOrder() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		id, _ := api.GetIdParameter(ctx)
+		customerID, _ := api.GetIdParameter(ctx, "id")
+		orderID, _ := api.GetIdParameter(ctx, "orderID")
+		body := make(map[string]string)
+		ctx.BindJSON(&body)
+		if err := api.Crud.ChangeOrderStatus(customerID, orderID, order.Status(body["status"])); err != nil {
+			ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
+		} else {
+			ctx.IndentedJSON(http.StatusOK, "changed")
+		}
+	}
+}
+
+func (api API) deleteCustomerOrders() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id, _ := api.GetIdParameter(ctx, "id")
 		productsIDs := &[]int{}
 		ctx.BindJSON(&productsIDs)
 		if err := api.Crud.DeleteItems(productsIDs, id); err != nil {

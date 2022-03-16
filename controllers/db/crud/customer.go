@@ -3,6 +3,7 @@ package crud
 import (
 	"log"
 	"online-supermarket/controllers/ent"
+	"online-supermarket/controllers/ent/order"
 	"online-supermarket/models"
 )
 
@@ -34,12 +35,35 @@ func (crud Crud) GetCustomer(id int) (*ent.Customer, error) {
 	}
 }
 
-func (crud Crud) GetOrdersOfUser(id int) ([]*ent.Order, error) {
-	if orders, err := crud.Client.Customer.Query().QueryOrders().All(crud.Ctx); err != nil {
-		log.Println("on AddOrder() in controllers/db/crud/order.go: ", err)
+func (crud Crud) GetOrdersProducts(customerID, orderID int) ([]*ent.Product, error) {
+	if cust, err := crud.GetCustomer(customerID); err != nil {
 		return nil, err
 	} else {
-		return orders, nil
+		if o, err := cust.QueryOrders().Where(order.ID(orderID)).First(crud.Ctx); err != nil {
+			return nil, err
+		} else {
+			if products, err := o.QueryProducts().All(crud.Ctx); err != nil {
+				return nil, err
+			} else {
+				return products, nil
+			}
+		}
+	}
+}
+
+func (crud Crud) GetOrdersOfCustomer(id int) ([]*ent.Order, error) {
+	if cust, err := crud.GetCustomer(id); err != nil {
+		return nil, err
+	} else {
+		return cust.QueryOrders().All(crud.Ctx)
+	}
+}
+
+func (crud Crud) GetOrderOfCustomer(customerID, orderID int) (*ent.Order, error) {
+	if cust, err := crud.GetCustomer(customerID); err != nil {
+		return nil, err
+	} else {
+		return cust.QueryOrders().Where(order.ID(orderID)).First(crud.Ctx)
 	}
 }
 
@@ -73,5 +97,22 @@ func (crud Crud) DeleteItems(cartItems *[]int, customerID int) error {
 	} else {
 		cust.Update().RemoveCartProductIDs(*cartItems...).Exec(crud.Ctx)
 		return nil
+	}
+}
+
+func (crud Crud) DeleteOrder(orderIDs *[]int, customerID int) error {
+	if cust, err := crud.GetCustomer(customerID); err != nil {
+		return nil
+	} else {
+		cust.Update().RemoveCartProductIDs(*orderIDs...).Save(crud.Ctx)
+		return nil
+	}
+}
+
+func (crud Crud) ChangeOrderStatus(customerID, orderID int, status order.Status) error {
+	if o, err := crud.GetOrderOfCustomer(customerID, orderID); err != nil {
+		return err
+	} else {
+		return o.Update().SetStatus(status).Exec(crud.Ctx)
 	}
 }

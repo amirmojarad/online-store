@@ -14,8 +14,8 @@ type API struct {
 	Crud   *crud.Crud
 }
 
-func (api API) GetIdParameter(ctx *gin.Context) (int, error) {
-	return strconv.Atoi(ctx.Param("id"))
+func (api API) GetIdParameter(ctx *gin.Context, param string) (int, error) {
+	return strconv.Atoi(ctx.Param(param))
 }
 
 func RunAPI(ctx context.Context, client *ent.Client) {

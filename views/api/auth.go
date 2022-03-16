@@ -8,13 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (api API) AuthRouter() {
+func (api *API) AuthRouter() {
 	auth := api.Router.Group("/users")
-	auth.POST("/login", loginUser(&api))
-	auth.POST("/signup", signUpUser(&api))
+	auth.POST("/login", api.loginUser())
+	auth.POST("/signup", api.signUpUser())
 }
 
-func loginUser(api *API) gin.HandlerFunc {
+func (api *API) loginUser() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		userSchema := &ent.User{}
 		ctx.BindJSON(&userSchema)
@@ -31,7 +31,7 @@ func loginUser(api *API) gin.HandlerFunc {
 	}
 }
 
-func signUpUser(api *API) gin.HandlerFunc {
+func (api *API) signUpUser() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		userSchema := &ent.User{}
 		ctx.BindJSON(&userSchema)
