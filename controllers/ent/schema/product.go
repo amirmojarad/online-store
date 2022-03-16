@@ -33,5 +33,6 @@ func (Product) Fields() []ent.Field {
 func (Product) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("category", Category.Type).Ref("products"),
+		edge.From("orders", Order.Type).Ref("products"),
 	}
 }

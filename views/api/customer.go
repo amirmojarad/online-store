@@ -85,12 +85,10 @@ func (api API) postOrderToCustomer() gin.HandlerFunc {
 		ctx.BindJSON(&om)
 		log.Println("OM", om)
 		if o, err := api.Crud.AddOrder(om.Order, om.ProductItems, id); err != nil {
-			ctx.IndentedJSON(http.StatusInternalServerError, err)
+			ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
 		} else {
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{
-				"customer": o.Edges.Customer,
-				"order":    o,
-				"products": o.Edges.Products,
+			ctx.IndentedJSON(http.StatusOK, gin.H{
+				"order": o,
 			})
 		}
 	}
