@@ -1,3 +1,4 @@
+// Package db provides crud functions and config attributes for database.
 package db
 
 import (
@@ -14,6 +15,7 @@ type databaseConf struct {
 	Dbname   string
 }
 
+// At first, it clean env of os then loading env variables from "controllers/db/db.env"
 func init() {
 	os.Clearenv()
 	if err := godotenv.Load("controllers/db/db.env"); err != nil {
@@ -21,6 +23,7 @@ func init() {
 	}
 }
 
+// get loaded env variables and create a new databaseConf struct
 func GetDatabaseConfig() *databaseConf {
 	username := os.Getenv("USERNAME")
 	password := os.Getenv("PASSWORD")
