@@ -4,13 +4,16 @@ import (
 	"log"
 	"online-supermarket/controllers/ent"
 	"online-supermarket/controllers/ent/user"
+	"online-supermarket/utils"
+
 	"time"
 )
 
 func (crud Crud) AddUser(u *ent.User) (*ent.User, error) {
+	hashedPassword, _ := utils.HashPassword(u.Password)
 	newUser, err := crud.Client.User.Create().
 		SetEmail(u.Email).
-		SetPassword(u.Password).
+		SetPassword(hashedPassword).
 		SetCreatedAt(time.Now()).
 		SetUpdatedAt(time.Now()).
 		Save(crud.Ctx)

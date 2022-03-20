@@ -7,13 +7,14 @@ import (
 	"online-supermarket/controllers/ent"
 	"online-supermarket/controllers/ent/order"
 	"online-supermarket/models"
+	"online-supermarket/views/middlewares/security"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (api API) CustomerRouter() {
-	category := api.Router.Group("/users")
+	category := api.Router.Group("/users", security.CheckAuth())
 	// Customer Endpoints
 	category.POST("/", api.postCustomer())
 	category.GET("/:id", api.getCustomer())

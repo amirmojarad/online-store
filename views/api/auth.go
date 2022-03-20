@@ -3,10 +3,14 @@ package api
 import (
 	"log"
 	"net/http"
+	"online-supermarket/controllers/auth"
 	"online-supermarket/controllers/ent"
+	"online-supermarket/utils"
 
 	"github.com/gin-gonic/gin"
 )
+
+var JwtService = auth.JWTAuthService()
 
 func (api *API) AuthRouter() {
 	auth := api.Router.Group("/users")
@@ -24,8 +28,11 @@ func (api *API) loginUser() gin.HandlerFunc {
 				"status":  400,
 			})
 			return
-		} else {
-			ctx.IndentedJSON(http.StatusOK, fetchedUser)
+		} else if utils.CheckPasswordHash(fetchedUser.Password, userSchema.Password) {
+			token := JwtService.GenerateToken(fetchedUser.Email, true)
+			ctx.IndentedJSON(http.StatusOK, gin.H{
+				"token": token,
+			})
 			return
 		}
 	}
@@ -35,6 +42,7 @@ func (api *API) signUpUser() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		userSchema := &ent.User{}
 		ctx.BindJSON(&userSchema)
+		log.Println(userSchema)
 		if createdUser, err := api.Crud.AddUser(userSchema); err != nil {
 			log.Println("on SignUpUser in auth.go: ", err)
 			ctx.IndentedJSON(http.StatusBadRequest, gin.H{
@@ -43,7 +51,12 @@ func (api *API) signUpUser() gin.HandlerFunc {
 			})
 			return
 		} else {
-			ctx.IndentedJSON(http.StatusOK, createdUser)
+			ctx.IndentedJSON(http.StatusOK, gin.H{
+				"email":     createdUser.Email,
+				"createdAt": createdUser.CreatedAt,
+				"updatedAt": createdUser.UpdatedAt,
+				"id":        createdUser.ID,
+			})
 			return
 		}
 	}
